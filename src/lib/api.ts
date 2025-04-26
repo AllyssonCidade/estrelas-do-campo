@@ -24,11 +24,16 @@ const handleApiError = (error: any, context: string): string => {
             // The request was made and the server responded with a status code
             // that falls out of the range of 2xx
             console.error(`API Error in ${context} (${error.response.status}):`, error.response.data);
-            errorMessage = error.response.data?.error || `Erro do servidor (${error.response.status}) em ${context}.`;
+            if (error.response.status === 404) {
+                 errorMessage = `Recurso não encontrado (${error.response.status}) em ${context}. Verifique a URL da API e o endpoint. URL: ${error.config?.url}`;
+            } else {
+                // Try to get error message from backend response, fallback to status text
+                errorMessage = error.response.data?.error || error.response.statusText || `Erro do servidor (${error.response.status}) em ${context}.`;
+            }
         } else if (error.request) {
             // The request was made but no response was received
-            console.error(`API Network Error in ${context}:`, error.request);
-            errorMessage = `Sem resposta do servidor em ${context}. Verifique a conexão ou a URL da API (${API_BASE_URL}).`;
+            console.error(`API Network Error in ${context}: No response received. Request URL: ${error.config?.url}`, error.request);
+            errorMessage = `Não foi possível conectar ao servidor em ${context}. Verifique a conexão ou a URL da API (${API_BASE_URL}).`;
         } else {
             // Something happened in setting up the request that triggered an Error
             console.error(`API Request Setup Error in ${context}:`, error.message);
@@ -37,7 +42,11 @@ const handleApiError = (error: any, context: string): string => {
     } else {
         // Non-Axios error
         console.error(`Non-API Error in ${context}:`, error);
-        errorMessage = `Ocorreu um erro inesperado em ${context}.`;
+        if (error instanceof Error) {
+             errorMessage = `Ocorreu um erro inesperado em ${context}: ${error.message}`;
+        } else {
+             errorMessage = `Ocorreu um erro inesperado em ${context}.`;
+        }
     }
     return errorMessage;
 }
@@ -47,8 +56,9 @@ const handleApiError = (error: any, context: string): string => {
 
 // Fetch Events for public view (sorted by date asc, upcoming only)
 export async function getEventosApi(): Promise<Evento[]> {
+  const requestUrl = `${API_BASE_URL}/api/eventos`; // Construct the full URL for logging
   try {
-    console.log(`Fetching events from: ${API_BASE_URL}/api/eventos`);
+    console.log(`Fetching events from: ${requestUrl}`); // Log the full request URL
     const response = await apiClient.get('/api/eventos');
     console.log("Events API response:", response.status, response.data);
     // Data should already be filtered and sorted by the backend for the public view
@@ -64,8 +74,9 @@ export async function getEventosApi(): Promise<Evento[]> {
 
 // Fetch ALL Events for CMS (sorted by date desc)
 export async function getAllEventosCMSApi(): Promise<Evento[]> {
+     const requestUrl = `${API_BASE_URL}/api/eventos/all`;
      try {
-        console.log(`Fetching all events for CMS from: ${API_BASE_URL}/api/eventos/all`);
+        console.log(`Fetching all events for CMS from: ${requestUrl}`);
         const response = await apiClient.get('/api/eventos/all');
          console.log("All Events CMS API response:", response.status, response.data);
         return response.data;
@@ -79,8 +90,9 @@ export async function getAllEventosCMSApi(): Promise<Evento[]> {
 
 // Add Event (requires password in data)
 export async function addEventoApi(eventoData: Omit<Evento, 'id'>, password: string): Promise<Evento> {
+  const requestUrl = `${API_BASE_URL}/api/eventos`;
   try {
-    console.log(`Adding event via: ${API_BASE_URL}/api/eventos`);
+    console.log(`Adding event via: ${requestUrl}`);
     const response = await apiClient.post('/api/eventos', { ...eventoData, password });
     console.log("Add Event API response:", response.status, response.data);
     return response.data.evento; // Assuming backend returns { message: '...', evento: {...} }
@@ -93,8 +105,9 @@ export async function addEventoApi(eventoData: Omit<Evento, 'id'>, password: str
 
 // Update Event (requires password in data)
 export async function updateEventoApi(id: number | string, eventoData: Omit<Evento, 'id'>, password: string): Promise<Evento> {
+   const requestUrl = `${API_BASE_URL}/api/eventos/${id}`;
    try {
-    console.log(`Updating event ${id} via: ${API_BASE_URL}/api/eventos/${id}`);
+    console.log(`Updating event ${id} via: ${requestUrl}`);
     const response = await apiClient.put(`/api/eventos/${id}`, { ...eventoData, password });
      console.log("Update Event API response:", response.status, response.data);
     return response.data.evento; // Assuming backend returns { message: '...', evento: {...} }
@@ -107,8 +120,9 @@ export async function updateEventoApi(id: number | string, eventoData: Omit<Even
 
 // Delete Event (requires password in data, passed in body for consistency)
 export async function deleteEventoApi(id: number | string, password: string): Promise<{ message: string }> {
+   const requestUrl = `${API_BASE_URL}/api/eventos/${id}`;
    try {
-    console.log(`Deleting event ${id} via: ${API_BASE_URL}/api/eventos/${id}`);
+    console.log(`Deleting event ${id} via: ${requestUrl}`);
     const response = await apiClient.delete(`/api/eventos/${id}`, {
         data: { password } // Send password in the data payload for DELETE
     });
@@ -125,25 +139,26 @@ export async function deleteEventoApi(id: number | string, password: string): Pr
 
 // Fetch News for public view (sorted by date desc, limit 10)
 export async function getNoticiasApi(): Promise<Noticia[]> {
+  const requestUrl = `${API_BASE_URL}/api/noticias`;
   try {
-    console.log(`Fetching noticias from: ${API_BASE_URL}/api/noticias`);
+    console.log(`Fetching noticias from: ${requestUrl}`);
     const response = await apiClient.get('/api/noticias');
     console.log("Noticias API response:", response.status, response.data);
     return response.data;
   } catch (error: any) {
     const errorMessage = handleApiError(error, 'getNoticiasApi');
     console.error("getNoticiasApi Final Error:", errorMessage);
-     // For now, return empty array on error to avoid breaking the page
-     // Consider adding sample data for development if needed
-     return [];
-    // throw new Error(errorMessage); // Or throw to let UI handle
+     // Return empty array on error for now, but log the specific error
+     // throw new Error(errorMessage); // Or throw to let UI handle
+     return []; // Return empty array to prevent breaking page, but error is logged
   }
 }
 
 // Fetch ALL News for CMS (sorted by date desc)
 export async function getAllNoticiasCMSApi(): Promise<Noticia[]> {
+    const requestUrl = `${API_BASE_URL}/api/noticias/all`;
     try {
-        console.log(`Fetching all noticias for CMS from: ${API_BASE_URL}/api/noticias/all`);
+        console.log(`Fetching all noticias for CMS from: ${requestUrl}`);
         const response = await apiClient.get('/api/noticias/all');
         console.log("All Noticias CMS API response:", response.status, response.data);
         return response.data;
@@ -156,8 +171,9 @@ export async function getAllNoticiasCMSApi(): Promise<Noticia[]> {
 
 // Add News (requires password in data)
 export async function addNoticiaApi(noticiaData: Omit<Noticia, 'id'>, password: string): Promise<Noticia> {
+    const requestUrl = `${API_BASE_URL}/api/noticias`;
     try {
-        console.log(`Adding noticia via: ${API_BASE_URL}/api/noticias`);
+        console.log(`Adding noticia via: ${requestUrl}`);
         const response = await apiClient.post('/api/noticias', { ...noticiaData, password });
         console.log("Add Noticia API response:", response.status, response.data);
         return response.data.noticia; // Assuming backend returns { message: '...', noticia: {...} }
@@ -170,8 +186,9 @@ export async function addNoticiaApi(noticiaData: Omit<Noticia, 'id'>, password: 
 
 // Update News (requires password in data)
 export async function updateNoticiaApi(id: number | string, noticiaData: Omit<Noticia, 'id'>, password: string): Promise<Noticia> {
+    const requestUrl = `${API_BASE_URL}/api/noticias/${id}`;
     try {
-        console.log(`Updating noticia ${id} via: ${API_BASE_URL}/api/noticias/${id}`);
+        console.log(`Updating noticia ${id} via: ${requestUrl}`);
         const response = await apiClient.put(`/api/noticias/${id}`, { ...noticiaData, password });
         console.log("Update Noticia API response:", response.status, response.data);
         return response.data.noticia; // Assuming backend returns { message: '...', noticia: {...} }
@@ -184,8 +201,9 @@ export async function updateNoticiaApi(id: number | string, noticiaData: Omit<No
 
 // Delete News (requires password in data)
 export async function deleteNoticiaApi(id: number | string, password: string): Promise<{ message: string }> {
+    const requestUrl = `${API_BASE_URL}/api/noticias/${id}`;
     try {
-        console.log(`Deleting noticia ${id} via: ${API_BASE_URL}/api/noticias/${id}`);
+        console.log(`Deleting noticia ${id} via: ${requestUrl}`);
         const response = await apiClient.delete(`/api/noticias/${id}`, {
             data: { password } // Send password in the data payload for DELETE
         });
@@ -197,5 +215,3 @@ export async function deleteNoticiaApi(id: number | string, password: string): P
         throw new Error(errorMessage);
     }
 }
-
-    

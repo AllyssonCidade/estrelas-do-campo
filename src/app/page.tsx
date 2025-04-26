@@ -15,8 +15,11 @@ function HeroSection() {
   return (
      // Updated section with background image, overlay, and specific heights
     <section className="relative bg-cover bg-center text-white py-16 sm:py-24 px-4 text-center overflow-hidden h-[250px] sm:h-[350px] flex flex-col items-center justify-center"
-             style={{ backgroundImage: "url('https://image.pollinations.ai/prompt/Illustration%20soccer%20ball%20on%20green%20field%20at%20sunset%2C%20warm%20golden%20sky%2C%20vibrant%20green%20grass%2C%20horizontal%2C%20semi-realistic%20style')", backgroundSize: "cover",
-    backgroundPosition: "center" }}> {/* Changed to center position */}
+             style={{
+                 backgroundImage: "url('https://image.pollinations.ai/prompt/Illustration%20soccer%20ball%20on%20green%20field%20at%20sunset%2C%20warm%20golden%20sky%2C%20vibrant%20green%20grass%2C%20horizontal%2C%20semi-realistic%20style')",
+                 backgroundSize: "cover",
+                 backgroundPosition: "center"
+            }}> {/* Changed to center position */}
       {/* Dark overlay for better text readability */}
       <div className="absolute inset-0 bg-black/30 z-0"></div> {/* Adjusted opacity */}
 
@@ -66,6 +69,7 @@ function HeroSection() {
                 agendaSection.scrollIntoView({ behavior: 'smooth' });
               }
             }}
+            aria-label="Ir para a seção da agenda" // Added aria-label
           >
             <a href="#agenda-section">Ver Agenda</a>
           </Button>
@@ -223,12 +227,15 @@ function AgendaSection() {
       setError(null); // Reset error before fetching
       try {
         // Fetch from API
+        console.log("Attempting to fetch events..."); // Added log
         const fetchedEventos = await getEventosApi();
+        console.log("Fetched events:", fetchedEventos); // Added log
         setEventos(fetchedEventos);
       } catch (error: any) {
-        console.error("Failed to fetch events from API:", error);
+        console.error("Error caught in fetchEventos:", error); // Log the caught error object
         // Use the error message thrown by getEventosApi
-        setError(error.message || "Não foi possível carregar a agenda. Tente novamente mais tarde.");
+        const errorMessage = error instanceof Error ? error.message : "Erro desconhecido ao buscar eventos.";
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -260,7 +267,7 @@ function AgendaSection() {
 
         {loading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
-            {[...Array(3)].map((_, i) => ( // Show 3 placeholders
+            {[...Array(3)].map((_, i) => ( // Show 3 placeholders using simple divs
                 <div key={`skeleton-${i}`} className="shadow-md rounded-lg border border-border bg-card p-4 space-y-3 animate-pulse">
                     <div className="h-6 w-3/4 bg-muted rounded"></div> {/* Skeleton Title */}
                     <div className="flex items-center gap-2">
@@ -282,6 +289,7 @@ function AgendaSection() {
           <div className="flex flex-col items-center justify-center text-center text-destructive bg-destructive/10 p-6 rounded-lg border border-destructive">
             <AlertCircle className="h-10 w-10 mb-3" />
             <p className="font-semibold">Erro ao Carregar Agenda</p>
+            {/* Display the specific error message from the state */}
             <p className="text-sm">{error}</p>
             <Button onClick={fetchEventos} variant="destructive" size="sm" className="mt-4">
                 Tentar Novamente
@@ -339,5 +347,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    

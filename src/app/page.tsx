@@ -102,7 +102,7 @@ function ApresentacaoSection() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={{ ...itemVariants, visible: { ...itemVariants.visible, transition: { ...itemVariants.visible.transition, delay: 0.4 } } }}>
             <div className="overflow-hidden rounded-lg shadow-md mb-4">
               <Image
-                src="https://via.placeholder.com/300x200/22C55E/FFFFFF?text=Futebol+Feminino" // Placeholder
+                src="https://videos.openai.com/vg-assets/assets%2Ftask_01jss2fn50fert2678jpc003k7%2F1745672019_img_0.webp?st=2025-04-26T18%3A20%3A02Z&se=2025-05-02T19%3A20%3A02Z&sks=b&skt=2025-04-26T18%3A20%3A02Z&ske=2025-05-02T19%3A20%3A02Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=3d249c53-07fa-4ba4-9b65-0bf8eb4ea46a&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=pzkgrHZI7mphYNSRlFAjfwbNitoOVsHIGVwdFWuWq2E%3D&az=oaivgprodscus" // Placeholder
                 alt="Time de futebol feminino celebrando união"
                 width={300}
                 height={200}
@@ -117,7 +117,7 @@ function ApresentacaoSection() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={{ ...itemVariants, visible: { ...itemVariants.visible, transition: { ...itemVariants.visible.transition, delay: 0.6 } } }}>
             <div className="overflow-hidden rounded-lg shadow-md mb-4">
               <Image
-                src="https://via.placeholder.com/300x200/FBBF24/1F2937?text=Jogadora" // Placeholder
+                src="https://videos.openai.com/vg-assets/assets%2Ftask_01jss3fs1rfcqaca6f80bpj9b2%2F1745673059_img_0.webp?st=2025-04-26T18%3A20%3A02Z&se=2025-05-02T19%3A20%3A02Z&sks=b&skt=2025-04-26T18%3A20%3A02Z&ske=2025-05-02T19%3A20%3A02Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=3d249c53-07fa-4ba4-9b65-0bf8eb4ea46a&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=QfFEeQB3FUd74RrcYPujWnTDaEfns9PypC%2FwHdOMdAY%3D&az=oaivgprodscus" // Placeholder
                 alt="Jogadora de futebol chutando a bola com energia"
                 width={300}
                 height={200}
@@ -151,7 +151,7 @@ function LocaisSection() {
       nome: "Campo Municipal",
       endereco: "Rua do Esporte, 123, Cidade",
       descricao: "Nosso lar para treinos e jogos!",
-      imagem: "https://via.placeholder.com/300x200/cccccc/000000?text=Campo+Municipal", // Placeholder
+      imagem: "https://tse1.mm.bing.net/th?id=OIP.CDutYtSWQBsO7bDMlEvwCwHaE6&pid=Api&P=0&h=180", // Placeholder
       alt: "Imagem do Campo Municipal",
       icon: <Map className="h-6 w-6 text-primary" />
     },
@@ -159,7 +159,7 @@ function LocaisSection() {
       nome: "Estádio Central",
       endereco: "Av. Central, 456, Cidade",
       descricao: "Palco dos grandes amistosos!",
-      imagem: "https://via.placeholder.com/300x200/cccccc/000000?text=Estádio+Central", // Placeholder
+      imagem: "https://tse1.mm.bing.net/th?id=OIP.7B7m-uxN9RFVzWsLPeowIAHaEa&pid=Api&P=0&h=180", // Placeholder
       alt: "Imagem do Estádio Central",
       icon: <Building className="h-6 w-6 text-primary" />
     }

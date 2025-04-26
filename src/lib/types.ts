@@ -1,4 +1,5 @@
 
+
 export type Evento = {
   id: number; // Changed to number for PostgreSQL SERIAL PRIMARY KEY
   titulo: string;
@@ -7,10 +8,13 @@ export type Evento = {
   local: string;
 };
 
+// Updated Noticia type to align with PostgreSQL table
 export type Noticia = {
-  id: string; // Kept as string assuming static or future ID structure
+  id: number; // Changed to number for PostgreSQL SERIAL PRIMARY KEY
   titulo: string;
   texto: string;
-  imagem?: string | null; // Optional image URL
+  imagem: string; // Image URL is now required based on table definition
   data: string; // DD/MM/YYYY
 };
+
+    

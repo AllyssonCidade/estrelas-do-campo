@@ -4,9 +4,16 @@
 import axios from 'axios';
 import type { Evento, Noticia } from '@/lib/types';
 
-// Define the base URL for the backend API
-// Use environment variable, fallback for local development
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://estrelas-backend.onrender.com'; // Use Render URL as default
+// Define the base URL for the backend API using environment variable
+// Ensure this is set in your Vercel environment variables.
+// NEXT_PUBLIC_ prefix makes it available in the browser.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_BASE_URL) {
+    console.warn("NEXT_PUBLIC_API_URL environment variable is not set. API calls might fail.");
+    // Optionally throw an error or set a default for local dev, but Vercel needs it.
+    // throw new Error("NEXT_PUBLIC_API_URL is not defined");
+}
 console.log("Using API Base URL:", API_BASE_URL); // Log the API URL being used
 
 const apiClient = axios.create({
@@ -21,32 +28,37 @@ const handleApiError = (error: any, context: string): string => {
     let errorMessage = `Erro desconhecido em ${context}.`;
     if (axios.isAxiosError(error)) {
         if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            console.error(`API Error in ${context} (${error.response.status}):`, error.response.data);
-            if (error.response.status === 404) {
-                 errorMessage = `Recurso não encontrado (${error.response.status}) em ${context}. Verifique a URL da API e o endpoint. URL: ${error.config?.url}`;
-            } else {
-                // Try to get error message from backend response, fallback to status text
-                errorMessage = error.response.data?.error || error.response.statusText || `Erro do servidor (${error.response.status}) em ${context}.`;
+            // Server responded with a status code outside the 2xx range
+             // Log the raw response data to see what the server actually sent
+            console.error(`API Error in ${context} (${error.response.status}): Response data:`, error.response.data);
+
+            // Check if the response data is an object and has an 'error' property
+            if (typeof error.response.data === 'object' && error.response.data?.error) {
+                errorMessage = error.response.data.error;
+            } else if (typeof error.response.data === 'string' && error.response.data.includes('Cannot GET')) {
+                 // Handle HTML error pages like "Cannot GET /api/..."
+                 errorMessage = `Endpoint não encontrado (${error.response.status}) em ${context}. Verifique a URL: ${error.config?.url}`;
+            }
+            else {
+                // Fallback to status text or a generic message
+                errorMessage = `Erro do servidor (${error.response.status}) em ${context}.`;
             }
         } else if (error.request) {
-            // The request was made but no response was received
-            console.error(`API Network Error in ${context}: No response received. Request URL: ${error.config?.url}`, error.request);
-            errorMessage = `Não foi possível conectar ao servidor em ${context}. Verifique a conexão ou a URL da API (${API_BASE_URL}).`;
+            // No response received (Network Error)
+            console.error(`API Network Error in ${context}: No response received. Is the backend running and accessible at ${API_BASE_URL}? Request URL: ${error.config?.url}`, error.request);
+            errorMessage = `Não foi possível conectar ao servidor (${context}). Verifique sua conexão e se o backend está online. URL: ${API_BASE_URL}`;
         } else {
-            // Something happened in setting up the request that triggered an Error
+            // Error setting up the request
             console.error(`API Request Setup Error in ${context}:`, error.message);
             errorMessage = `Erro ao configurar a requisição para ${context}: ${error.message}`;
         }
-    } else {
-        // Non-Axios error
+    } else if (error instanceof Error) {
+        // Non-Axios error (e.g., JSON parsing error in response, etc.)
         console.error(`Non-API Error in ${context}:`, error);
-        if (error instanceof Error) {
-             errorMessage = `Ocorreu um erro inesperado em ${context}: ${error.message}`;
-        } else {
-             errorMessage = `Ocorreu um erro inesperado em ${context}.`;
-        }
+        errorMessage = `Ocorreu um erro inesperado (${context}): ${error.message}`;
+    } else {
+         console.error(`Unknown Error type in ${context}:`, error);
+         errorMessage = `Ocorreu um erro inesperado (${context}).`;
     }
     return errorMessage;
 }
@@ -54,31 +66,39 @@ const handleApiError = (error: any, context: string): string => {
 
 // --- API Functions for Eventos ---
 
-// Fetch Events for public view (sorted by date asc, upcoming only)
+// Fetch Events for public view (sorted by date asc, upcoming only, limit 20)
 export async function getEventosApi(): Promise<Evento[]> {
-  const requestUrl = `${API_BASE_URL}/api/eventos`; // Construct the full URL for logging
+  if (!API_BASE_URL) return Promise.reject(new Error("API URL não configurada."));
+  const endpoint = '/api/eventos';
   try {
-    console.log(`Fetching events from: ${requestUrl}`); // Log the full request URL
-    const response = await apiClient.get('/api/eventos');
-    console.log("Events API response:", response.status, response.data);
-    // Data should already be filtered and sorted by the backend for the public view
+    console.log(`Fetching events from: ${API_BASE_URL}${endpoint}`);
+    const response = await apiClient.get(endpoint);
+     // Check if response.data is actually an array
+    if (!Array.isArray(response.data)) {
+       console.error("API response for events is not an array:", response.data);
+       throw new Error("Resposta inesperada do servidor ao buscar eventos.");
+    }
+    console.log("Events API response:", response.status);
     return response.data;
   } catch (error: any) {
     const errorMessage = handleApiError(error, 'getEventosApi');
     console.error("getEventosApi Final Error:", errorMessage);
-    // Consider returning sample data *only* for development/debugging if needed
-    // if (process.env.NODE_ENV === 'development') { ... }
     throw new Error(errorMessage); // Throw error to be handled by UI
   }
 }
 
 // Fetch ALL Events for CMS (sorted by date desc)
 export async function getAllEventosCMSApi(): Promise<Evento[]> {
-     const requestUrl = `${API_BASE_URL}/api/eventos/all`;
+    if (!API_BASE_URL) return Promise.reject(new Error("API URL não configurada."));
+    const endpoint = '/api/eventos/all';
      try {
-        console.log(`Fetching all events for CMS from: ${requestUrl}`);
-        const response = await apiClient.get('/api/eventos/all');
-         console.log("All Events CMS API response:", response.status, response.data);
+        console.log(`Fetching all events for CMS from: ${API_BASE_URL}${endpoint}`);
+        const response = await apiClient.get(endpoint);
+         if (!Array.isArray(response.data)) {
+            console.error("API response for all events CMS is not an array:", response.data);
+            throw new Error("Resposta inesperada do servidor ao buscar todos os eventos.");
+        }
+        console.log("All Events CMS API response:", response.status);
         return response.data;
     } catch (error: any) {
         const errorMessage = handleApiError(error, 'getAllEventosCMSApi');
@@ -88,14 +108,18 @@ export async function getAllEventosCMSApi(): Promise<Evento[]> {
 }
 
 
-// Add Event (requires password in data)
+// Add Event (requires password)
 export async function addEventoApi(eventoData: Omit<Evento, 'id'>, password: string): Promise<Evento> {
-  const requestUrl = `${API_BASE_URL}/api/eventos`;
+  if (!API_BASE_URL) return Promise.reject(new Error("API URL não configurada."));
+  const endpoint = '/api/eventos';
   try {
-    console.log(`Adding event via: ${requestUrl}`);
-    const response = await apiClient.post('/api/eventos', { ...eventoData, password });
+    console.log(`Adding event via: ${API_BASE_URL}${endpoint}`);
+    const response = await apiClient.post(endpoint, { ...eventoData, password });
     console.log("Add Event API response:", response.status, response.data);
-    return response.data.evento; // Assuming backend returns { message: '...', evento: {...} }
+    if (!response.data || !response.data.evento) {
+         throw new Error("Resposta inválida do servidor ao adicionar evento.");
+    }
+    return response.data.evento;
   } catch (error: any) {
      const errorMessage = handleApiError(error, 'addEventoApi');
      console.error("addEventoApi Final Error:", errorMessage);
@@ -103,14 +127,18 @@ export async function addEventoApi(eventoData: Omit<Evento, 'id'>, password: str
   }
 }
 
-// Update Event (requires password in data)
+// Update Event (requires password)
 export async function updateEventoApi(id: number | string, eventoData: Omit<Evento, 'id'>, password: string): Promise<Evento> {
-   const requestUrl = `${API_BASE_URL}/api/eventos/${id}`;
+   if (!API_BASE_URL) return Promise.reject(new Error("API URL não configurada."));
+   const endpoint = `/api/eventos/${id}`;
    try {
-    console.log(`Updating event ${id} via: ${requestUrl}`);
-    const response = await apiClient.put(`/api/eventos/${id}`, { ...eventoData, password });
+    console.log(`Updating event ${id} via: ${API_BASE_URL}${endpoint}`);
+    const response = await apiClient.put(endpoint, { ...eventoData, password });
      console.log("Update Event API response:", response.status, response.data);
-    return response.data.evento; // Assuming backend returns { message: '...', evento: {...} }
+     if (!response.data || !response.data.evento) {
+         throw new Error("Resposta inválida do servidor ao atualizar evento.");
+    }
+    return response.data.evento;
   } catch (error: any) {
     const errorMessage = handleApiError(error, `updateEventoApi (id: ${id})`);
     console.error("updateEventoApi Final Error:", errorMessage);
@@ -118,16 +146,21 @@ export async function updateEventoApi(id: number | string, eventoData: Omit<Even
   }
 }
 
-// Delete Event (requires password in data, passed in body for consistency)
+// Delete Event (requires password)
 export async function deleteEventoApi(id: number | string, password: string): Promise<{ message: string }> {
-   const requestUrl = `${API_BASE_URL}/api/eventos/${id}`;
+   if (!API_BASE_URL) return Promise.reject(new Error("API URL não configurada."));
+   const endpoint = `/api/eventos/${id}`;
    try {
-    console.log(`Deleting event ${id} via: ${requestUrl}`);
-    const response = await apiClient.delete(`/api/eventos/${id}`, {
-        data: { password } // Send password in the data payload for DELETE
+    console.log(`Deleting event ${id} via: ${API_BASE_URL}${endpoint}`);
+    // Send password in the data payload for DELETE, as configured in the backend
+    const response = await apiClient.delete(endpoint, {
+        data: { password }
     });
     console.log("Delete Event API response:", response.status, response.data);
-    return response.data; // Assuming backend returns { message: '...' }
+     if (!response.data || !response.data.message) {
+         throw new Error("Resposta inválida do servidor ao deletar evento.");
+    }
+    return response.data;
   } catch (error: any) {
     const errorMessage = handleApiError(error, `deleteEventoApi (id: ${id})`);
     console.error("deleteEventoApi Final Error:", errorMessage);
@@ -139,28 +172,37 @@ export async function deleteEventoApi(id: number | string, password: string): Pr
 
 // Fetch News for public view (sorted by date desc, limit 10)
 export async function getNoticiasApi(): Promise<Noticia[]> {
-  const requestUrl = `${API_BASE_URL}/api/noticias`;
+  if (!API_BASE_URL) return Promise.reject(new Error("API URL não configurada."));
+  const endpoint = '/api/noticias';
   try {
-    console.log(`Fetching noticias from: ${requestUrl}`);
-    const response = await apiClient.get('/api/noticias');
-    console.log("Noticias API response:", response.status, response.data);
+    console.log(`Fetching noticias from: ${API_BASE_URL}${endpoint}`);
+    const response = await apiClient.get(endpoint);
+     if (!Array.isArray(response.data)) {
+       console.error("API response for noticias is not an array:", response.data);
+       throw new Error("Resposta inesperada do servidor ao buscar notícias.");
+    }
+    console.log("Noticias API response:", response.status);
     return response.data;
   } catch (error: any) {
     const errorMessage = handleApiError(error, 'getNoticiasApi');
     console.error("getNoticiasApi Final Error:", errorMessage);
-     // Return empty array on error for now, but log the specific error
-     // throw new Error(errorMessage); // Or throw to let UI handle
-     return []; // Return empty array to prevent breaking page, but error is logged
+     // Decide how to handle: throw error or return empty array? Throwing is usually better for UI feedback.
+     throw new Error(errorMessage);
   }
 }
 
 // Fetch ALL News for CMS (sorted by date desc)
 export async function getAllNoticiasCMSApi(): Promise<Noticia[]> {
-    const requestUrl = `${API_BASE_URL}/api/noticias/all`;
+    if (!API_BASE_URL) return Promise.reject(new Error("API URL não configurada."));
+    const endpoint = '/api/noticias/all';
     try {
-        console.log(`Fetching all noticias for CMS from: ${requestUrl}`);
-        const response = await apiClient.get('/api/noticias/all');
-        console.log("All Noticias CMS API response:", response.status, response.data);
+        console.log(`Fetching all noticias for CMS from: ${API_BASE_URL}${endpoint}`);
+        const response = await apiClient.get(endpoint);
+         if (!Array.isArray(response.data)) {
+            console.error("API response for all noticias CMS is not an array:", response.data);
+            throw new Error("Resposta inesperada do servidor ao buscar todas as notícias.");
+        }
+        console.log("All Noticias CMS API response:", response.status);
         return response.data;
     } catch (error: any) {
         const errorMessage = handleApiError(error, 'getAllNoticiasCMSApi');
@@ -169,14 +211,18 @@ export async function getAllNoticiasCMSApi(): Promise<Noticia[]> {
     }
 }
 
-// Add News (requires password in data)
+// Add News (requires password)
 export async function addNoticiaApi(noticiaData: Omit<Noticia, 'id'>, password: string): Promise<Noticia> {
-    const requestUrl = `${API_BASE_URL}/api/noticias`;
+    if (!API_BASE_URL) return Promise.reject(new Error("API URL não configurada."));
+    const endpoint = '/api/noticias';
     try {
-        console.log(`Adding noticia via: ${requestUrl}`);
-        const response = await apiClient.post('/api/noticias', { ...noticiaData, password });
+        console.log(`Adding noticia via: ${API_BASE_URL}${endpoint}`);
+        const response = await apiClient.post(endpoint, { ...noticiaData, password });
         console.log("Add Noticia API response:", response.status, response.data);
-        return response.data.noticia; // Assuming backend returns { message: '...', noticia: {...} }
+        if (!response.data || !response.data.noticia) {
+             throw new Error("Resposta inválida do servidor ao adicionar notícia.");
+        }
+        return response.data.noticia;
     } catch (error: any) {
         const errorMessage = handleApiError(error, 'addNoticiaApi');
         console.error("addNoticiaApi Final Error:", errorMessage);
@@ -184,14 +230,18 @@ export async function addNoticiaApi(noticiaData: Omit<Noticia, 'id'>, password: 
     }
 }
 
-// Update News (requires password in data)
+// Update News (requires password)
 export async function updateNoticiaApi(id: number | string, noticiaData: Omit<Noticia, 'id'>, password: string): Promise<Noticia> {
-    const requestUrl = `${API_BASE_URL}/api/noticias/${id}`;
+    if (!API_BASE_URL) return Promise.reject(new Error("API URL não configurada."));
+    const endpoint = `/api/noticias/${id}`;
     try {
-        console.log(`Updating noticia ${id} via: ${requestUrl}`);
-        const response = await apiClient.put(`/api/noticias/${id}`, { ...noticiaData, password });
+        console.log(`Updating noticia ${id} via: ${API_BASE_URL}${endpoint}`);
+        const response = await apiClient.put(endpoint, { ...noticiaData, password });
         console.log("Update Noticia API response:", response.status, response.data);
-        return response.data.noticia; // Assuming backend returns { message: '...', noticia: {...} }
+         if (!response.data || !response.data.noticia) {
+            throw new Error("Resposta inválida do servidor ao atualizar notícia.");
+        }
+        return response.data.noticia;
     } catch (error: any) {
         const errorMessage = handleApiError(error, `updateNoticiaApi (id: ${id})`);
         console.error("updateNoticiaApi Final Error:", errorMessage);
@@ -199,16 +249,20 @@ export async function updateNoticiaApi(id: number | string, noticiaData: Omit<No
     }
 }
 
-// Delete News (requires password in data)
+// Delete News (requires password)
 export async function deleteNoticiaApi(id: number | string, password: string): Promise<{ message: string }> {
-    const requestUrl = `${API_BASE_URL}/api/noticias/${id}`;
+    if (!API_BASE_URL) return Promise.reject(new Error("API URL não configurada."));
+    const endpoint = `/api/noticias/${id}`;
     try {
-        console.log(`Deleting noticia ${id} via: ${requestUrl}`);
-        const response = await apiClient.delete(`/api/noticias/${id}`, {
-            data: { password } // Send password in the data payload for DELETE
+        console.log(`Deleting noticia ${id} via: ${API_BASE_URL}${endpoint}`);
+        const response = await apiClient.delete(endpoint, {
+            data: { password } // Send password in the data payload
         });
         console.log("Delete Noticia API response:", response.status, response.data);
-        return response.data; // Assuming backend returns { message: '...' }
+         if (!response.data || !response.data.message) {
+             throw new Error("Resposta inválida do servidor ao deletar notícia.");
+        }
+        return response.data;
     } catch (error: any) {
         const errorMessage = handleApiError(error, `deleteNoticiaApi (id: ${id})`);
         console.error("deleteNoticiaApi Final Error:", errorMessage);

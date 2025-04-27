@@ -5,26 +5,24 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import {
     getAllEventosCMSApi, addEventoApi, updateEventoApi, deleteEventoApi,
-    getAllNoticiasCMSApi, addNoticiaApi, updateNoticiaApi, deleteNoticiaApi // Import Noticia API functions
+    getAllNoticiasCMSApi, addNoticiaApi, updateNoticiaApi, deleteNoticiaApi
 } from '@/lib/api';
-import type { Evento, Noticia } from '@/lib/types'; // Import Noticia type
+import type { Evento, Noticia } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea'; // Import Textarea for Noticia text
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { CalendarIcon, PlusCircle, Edit, Trash2, LogOut, Loader2, Newspaper, Image as ImageIcon, Clock, MapPin, AlertCircle } from 'lucide-react'; // Added Newspaper, ImageIcon
+import { CalendarIcon, PlusCircle, Edit, Trash2, LogOut, Loader2, Newspaper, Image as ImageIcon, Clock, MapPin, AlertCircle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Import Tabs
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, parse, isValid } from 'date-fns';
 import { isValidUrl } from '@/lib/validation'; // Import URL validation helper
 
-
 // --- Admin Login Component ---
-// (Keep existing AdminLogin component as is)
 function AdminLogin({ onLoginSuccess }: { onLoginSuccess: (password: string) => void }) {
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState('');
@@ -36,14 +34,14 @@ function AdminLogin({ onLoginSuccess }: { onLoginSuccess: (password: string) => 
     e.preventDefault();
     setError('');
     setLoading(true);
-    // Simple password check
+
+    // Basic check (consider a more secure method for real apps)
     if (password === correctPassword) {
-       // Store password temporarily in parent state for API calls
-       onLoginSuccess(password);
+       onLoginSuccess(password); // Pass password for API calls
     } else {
       setError('Senha incorreta.');
     }
-    setLoading(false); // Stop loading indicator
+    setLoading(false);
   };
 
   return (
@@ -82,7 +80,9 @@ function AdminLogin({ onLoginSuccess }: { onLoginSuccess: (password: string) => 
 const parseDateString = (dateStr: string | undefined): Date | undefined => {
   if (!dateStr) return undefined;
   try {
+    // Use parse correctly: string, format, referenceDate
     const parsedDate = parse(dateStr, 'dd/MM/yyyy', new Date());
+    // Check if the parsed date is valid
     return isValid(parsedDate) ? parsedDate : undefined;
   } catch {
     return undefined;
@@ -90,13 +90,12 @@ const parseDateString = (dateStr: string | undefined): Date | undefined => {
 };
 
 // --- Event Form Component ---
-// (Keep existing EventForm component mostly as is, minor validation tweaks if needed)
 type EventFormProps = {
   evento?: Evento | null;
-  onSave: (eventoData: Omit<Evento, 'id'> | Evento, password: string) => Promise<void>; // Add password param
+  onSave: (eventoData: Omit<Evento, 'id'> | Evento, password: string) => Promise<void>;
   onCancel: () => void;
   isSaving: boolean;
-  adminPassword?: string | null; // Pass password down
+  adminPassword?: string | null;
 };
 
 function EventForm({ evento, onSave, onCancel, isSaving, adminPassword }: EventFormProps) {
@@ -121,6 +120,7 @@ function EventForm({ evento, onSave, onCancel, isSaving, adminPassword }: EventF
 
     if (!adminPassword) {
         setFormError('Erro de autenticação. Faça login novamente.');
+        toast({ variant: "destructive", title: "Erro de Autenticação", description: "Senha de admin não encontrada." });
         return;
     }
 
@@ -142,8 +142,9 @@ function EventForm({ evento, onSave, onCancel, isSaving, adminPassword }: EventF
     }
 
     const formattedDate = format(data, 'dd/MM/yyyy');
-    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formattedDate) || !parseDateString(formattedDate)) {
-        setFormError('Data inválida selecionada.'); // Should not happen with calendar, but good practice
+    // Double check format just in case
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formattedDate)) {
+        setFormError('Data inválida. Use o formato DD/MM/YYYY.');
         return;
     }
 
@@ -156,21 +157,24 @@ function EventForm({ evento, onSave, onCancel, isSaving, adminPassword }: EventF
     };
 
     try {
-        await onSave(eventoData, adminPassword); // Pass password to the save handler
+        await onSave(eventoData, adminPassword); // Pass password
+        // Success handled by parent component's toast
     } catch (error: any) {
-        setFormError(error.message || "Erro ao salvar. Tente novamente.");
-        toast({ variant: "destructive", title: "Erro", description: error.message });
+        // Error should be shown via toast in the parent, but set local error state too
+        setFormError(error.message || "Erro desconhecido ao salvar evento.");
+        // Optional: Show toast here as well if parent doesn't always handle it
+        // toast({ variant: "destructive", title: "Erro ao Salvar", description: error.message || "Tente novamente." });
     }
   };
 
   return (
-     <Card className="mb-6">
+     <Card className="mb-6 shadow-md border">
        <CardHeader>
-        <CardTitle>{evento ? 'Editar Evento' : 'Adicionar Novo Evento'}</CardTitle>
+        <CardTitle className="text-primary">{evento ? 'Editar Evento' : 'Adicionar Novo Evento'}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
          <CardContent className="space-y-4">
-            {formError && <p className="text-sm text-destructive">{formError}</p>}
+            {formError && <p className="text-sm text-destructive bg-destructive/10 p-2 rounded border border-destructive">{formError}</p>}
             <div className="space-y-1">
                 <Label htmlFor="ev-titulo">Título</Label>
                 <Input id="ev-titulo" value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={100} required aria-required="true" />
@@ -187,17 +191,18 @@ function EventForm({ evento, onSave, onCancel, isSaving, adminPassword }: EventF
                             aria-required="true"
                         >
                             <CalendarIcon className="mr-2 h-4 w-4" />
+                            {/* Ensure data is a valid Date before formatting */}
                             {data instanceof Date && isValid(data) ? format(data, "dd/MM/yyyy") : <span>Escolha uma data</span>}
                         </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={data} onSelect={setData} initialFocus />
+                        <PopoverContent className="w-auto p-0" align="start">
+                           <Calendar mode="single" selected={data} onSelect={setData} initialFocus />
                         </PopoverContent>
                     </Popover>
                  </div>
                  <div className="space-y-1">
                     <Label htmlFor="ev-horario">Horário (HH:MM)</Label>
-                    <Input id="ev-horario" value={horario} onChange={(e) => setHorario(e.target.value)} placeholder="16:00" pattern="\d{2}:\d{2}" required aria-required="true" />
+                    <Input id="ev-horario" value={horario} onChange={(e) => setHorario(e.target.value)} placeholder="16:00" pattern="\d{2}:\d{2}" title="Use o formato HH:MM" required aria-required="true" />
                 </div>
             </div>
              <div className="space-y-1">
@@ -226,7 +231,7 @@ type NoticiaFormProps = {
   onSave: (noticiaData: Omit<Noticia, 'id'> | Noticia, password: string) => Promise<void>;
   onCancel: () => void;
   isSaving: boolean;
-  adminPassword?: string | null; // Pass password down
+  adminPassword?: string | null;
 };
 
 function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: NoticiaFormProps) {
@@ -251,6 +256,7 @@ function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: Not
 
      if (!adminPassword) {
         setFormError('Erro de autenticação. Faça login novamente.');
+         toast({ variant: "destructive", title: "Erro de Autenticação", description: "Senha de admin não encontrada." });
         return;
     }
 
@@ -263,16 +269,19 @@ function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: Not
         return;
     }
      if (!isValidUrl(imagem)) {
-      setFormError('URL da imagem inválida. Use o formato https://...');
+      setFormError('URL da imagem inválida. Use o formato http:// ou https://...');
       return;
     }
-
-     const formattedDate = format(data, 'dd/MM/yyyy');
-     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formattedDate) || !parseDateString(formattedDate)) {
-        setFormError('Data inválida selecionada.');
+    if (imagem.length > 255) {
+        setFormError('URL da imagem não pode exceder 255 caracteres.');
         return;
     }
 
+     const formattedDate = format(data, 'dd/MM/yyyy');
+     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formattedDate)) {
+        setFormError('Data inválida. Use o formato DD/MM/YYYY.');
+        return;
+    }
 
     const noticiaData: Omit<Noticia, 'id'> | Noticia = {
       ...(noticia && { id: noticia.id }),
@@ -283,21 +292,23 @@ function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: Not
     };
 
     try {
-      await onSave(noticiaData, adminPassword); // Pass password to the handler
+      await onSave(noticiaData, adminPassword); // Pass password
+      // Success toast handled by parent
     } catch (error: any) {
-      setFormError(error.message || "Erro ao salvar notícia. Tente novamente.");
-      toast({ variant: "destructive", title: "Erro", description: error.message });
+       setFormError(error.message || "Erro desconhecido ao salvar notícia.");
+       // Optional: Show toast here as well if parent doesn't always handle it
+       // toast({ variant: "destructive", title: "Erro ao Salvar Notícia", description: error.message || "Tente novamente." });
     }
   };
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 shadow-md border">
        <CardHeader>
-        <CardTitle>{noticia ? 'Editar Notícia' : 'Adicionar Nova Notícia'}</CardTitle>
+        <CardTitle className="text-primary">{noticia ? 'Editar Notícia' : 'Adicionar Nova Notícia'}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
          <CardContent className="space-y-4">
-            {formError && <p className="text-sm text-destructive">{formError}</p>}
+            {formError && <p className="text-sm text-destructive bg-destructive/10 p-2 rounded border border-destructive">{formError}</p>}
             <div className="space-y-1">
                 <Label htmlFor="nt-titulo">Título</Label>
                 <Input id="nt-titulo" value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={100} required aria-required="true" />
@@ -309,7 +320,7 @@ function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: Not
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <div className="space-y-1">
                     <Label htmlFor="nt-imagem">URL da Imagem</Label>
-                    <Input id="nt-imagem" type="url" value={imagem} onChange={(e) => setImagem(e.target.value)} placeholder="https://..." required aria-required="true" />
+                    <Input id="nt-imagem" type="url" value={imagem} onChange={(e) => setImagem(e.target.value)} placeholder="https://..." required aria-required="true" title="Insira uma URL válida começando com http:// or https://" maxLength={255} />
                  </div>
                  <div className="space-y-1">
                     <Label htmlFor="nt-data">Data (DD/MM/YYYY)</Label>
@@ -325,8 +336,8 @@ function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: Not
                             {data instanceof Date && isValid(data) ? format(data, "dd/MM/yyyy") : <span>Escolha uma data</span>}
                         </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={data} onSelect={setData} initialFocus />
+                        <PopoverContent className="w-auto p-0" align="start">
+                           <Calendar mode="single" selected={data} onSelect={setData} initialFocus />
                         </PopoverContent>
                     </Popover>
                  </div>
@@ -370,12 +381,15 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
   const [deletingNoticiaId, setDeletingNoticiaId] = React.useState<number | string | null>(null);
   const [errorNoticias, setErrorNoticias] = React.useState<string | null>(null);
 
-  // Fetch Data
-  const fetchEventos = async () => {
+  // --- Fetch Data ---
+  const fetchEventos = React.useCallback(async () => {
     setLoadingEventos(true);
     setErrorEventos(null);
     try {
-      const data = await getAllEventosCMSApi();
+      // Pass password via header for GET requests needing auth (if applicable)
+      // Or rely on session/token if implemented differently.
+      // For simple password, GET might not need it, but keep fetch logic consistent.
+      const data = await getAllEventosCMSApi(); // Assumes GET doesn't need pwd
       setEventos(data);
     } catch (error: any) {
        setErrorEventos(error.message || "Não foi possível carregar os eventos.");
@@ -383,13 +397,13 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
     } finally {
       setLoadingEventos(false);
     }
-  };
+  }, [toast]); // Added toast dependency
 
-   const fetchNoticias = async () => {
+   const fetchNoticias = React.useCallback(async () => {
     setLoadingNoticias(true);
     setErrorNoticias(null);
     try {
-      const data = await getAllNoticiasCMSApi();
+      const data = await getAllNoticiasCMSApi(); // Assumes GET doesn't need pwd
       setNoticias(data);
     } catch (error: any) {
        setErrorNoticias(error.message || "Não foi possível carregar as notícias.");
@@ -397,28 +411,31 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
     } finally {
       setLoadingNoticias(false);
     }
-  };
+  }, [toast]); // Added toast dependency
 
   React.useEffect(() => {
-    fetchEventos();
-    fetchNoticias();
-  }, []);
+    // Fetch data only if authenticated
+    if (adminPassword) {
+        fetchEventos();
+        fetchNoticias();
+    }
+  }, [adminPassword, fetchEventos, fetchNoticias]); // Rerun if password changes or fetch functions change
 
   // --- Event Handlers ---
   const handleLogout = () => {
-    onLogout();
-    router.push('/');
+    onLogout(); // Call parent logout handler
+    router.push('/'); // Redirect to home after logout
   };
 
-  // Event Handlers
+  // --- Event CRUD Handlers ---
   const handleAddNewEvento = () => { setEditingEvento(null); setIsEventFormOpen(true); };
   const handleEditEvento = (evento: Evento) => { setEditingEvento(evento); setIsEventFormOpen(true); };
   const handleDeleteEvento = async (id: number | string) => {
     setDeletingEventoId(id);
     try {
-      await deleteEventoApi(id, adminPassword);
+      await deleteEventoApi(id, adminPassword); // Pass password
       toast({ title: "Sucesso", description: "Evento deletado." });
-      fetchEventos();
+      fetchEventos(); // Refresh list
     } catch (error: any) {
       toast({ variant: "destructive", title: "Erro ao Deletar Evento", description: error.message });
     } finally {
@@ -428,7 +445,8 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
   const handleSaveEvento = async (eventoData: Omit<Evento, 'id'> | Evento, password: string) => {
     setIsSavingEvento(true);
     try {
-       const dataToSend: Omit<Evento, 'id'> = { // Ensure only required fields are sent
+       // Extract only necessary fields, ensuring no extra properties are sent
+       const dataToSend: Omit<Evento, 'id'> = {
           titulo: eventoData.titulo,
           data: eventoData.data,
           horario: eventoData.horario,
@@ -436,32 +454,32 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
        };
 
       if ('id' in eventoData && eventoData.id) {
-        await updateEventoApi(eventoData.id, dataToSend, password);
+        await updateEventoApi(eventoData.id, dataToSend, password); // Use dataToSend
         toast({ title: "Sucesso", description: "Evento atualizado." });
       } else {
-        await addEventoApi(dataToSend, password);
+        await addEventoApi(dataToSend, password); // Use dataToSend
         toast({ title: "Sucesso", description: "Evento adicionado." });
       }
       setIsEventFormOpen(false);
       setEditingEvento(null);
-      fetchEventos();
+      fetchEventos(); // Refresh list
     } catch (error: any) {
        toast({ variant: "destructive", title: "Erro ao Salvar Evento", description: error.message });
-       throw error; // Re-throw to be caught by form if needed
+       throw error; // Re-throw to allow form to potentially handle it
     } finally {
       setIsSavingEvento(false);
     }
   };
 
-  // Noticia Handlers
+  // --- Noticia CRUD Handlers ---
   const handleAddNewNoticia = () => { setEditingNoticia(null); setIsNoticiaFormOpen(true); };
   const handleEditNoticia = (noticia: Noticia) => { setEditingNoticia(noticia); setIsNoticiaFormOpen(true); };
   const handleDeleteNoticia = async (id: number | string) => {
     setDeletingNoticiaId(id);
     try {
-      await deleteNoticiaApi(id, adminPassword);
+      await deleteNoticiaApi(id, adminPassword); // Pass password
       toast({ title: "Sucesso", description: "Notícia deletada." });
-      fetchNoticias();
+      fetchNoticias(); // Refresh list
     } catch (error: any) {
       toast({ variant: "destructive", title: "Erro ao Deletar Notícia", description: error.message });
     } finally {
@@ -471,7 +489,7 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
  const handleSaveNoticia = async (noticiaData: Omit<Noticia, 'id'> | Noticia, password: string) => {
     setIsSavingNoticia(true);
     try {
-        const dataToSend: Omit<Noticia, 'id'> = { // Ensure only required fields are sent
+        const dataToSend: Omit<Noticia, 'id'> = {
             titulo: noticiaData.titulo,
             texto: noticiaData.texto,
             imagem: noticiaData.imagem,
@@ -479,18 +497,18 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
         };
 
         if ('id' in noticiaData && noticiaData.id) {
-            await updateNoticiaApi(noticiaData.id, dataToSend, password);
+            await updateNoticiaApi(noticiaData.id, dataToSend, password); // Use dataToSend
             toast({ title: "Sucesso", description: "Notícia atualizada." });
         } else {
-            await addNoticiaApi(dataToSend, password);
+            await addNoticiaApi(dataToSend, password); // Use dataToSend
             toast({ title: "Sucesso", description: "Notícia adicionada." });
         }
         setIsNoticiaFormOpen(false);
         setEditingNoticia(null);
-        fetchNoticias();
+        fetchNoticias(); // Refresh list
     } catch (error: any) {
         toast({ variant: "destructive", title: "Erro ao Salvar Notícia", description: error.message });
-        throw error; // Re-throw to be caught by form if needed
+        throw error; // Re-throw
     } finally {
         setIsSavingNoticia(false);
     }
@@ -500,17 +518,8 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
    const renderLoadingState = (count = 3) => (
      <div className="space-y-3">
        {[...Array(count)].map((_, i) => (
-         <div key={i} className="h-24 w-full rounded-lg bg-muted/50 animate-pulse p-4 flex justify-between items-center border">
-           <div className="space-y-2 flex-grow mr-4">
-             <div className="h-5 w-3/4 bg-muted rounded"></div>
-             <div className="h-4 w-1/2 bg-muted rounded"></div>
-             <div className="h-4 w-1/3 bg-muted rounded"></div>
-           </div>
-           <div className="flex gap-2">
-             <div className="h-9 w-9 bg-muted rounded"></div>
-             <div className="h-9 w-9 bg-muted rounded"></div>
-           </div>
-         </div>
+          // Simple placeholder div
+         <div key={i} className="h-24 w-full rounded-lg bg-muted/60 animate-pulse border p-4"></div>
        ))}
      </div>
    );
@@ -531,7 +540,7 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
 
   return (
     <div className="container mx-auto max-w-4xl py-8 px-4">
-       <div className="flex justify-between items-center mb-6">
+       <div className="flex justify-between items-center mb-6 border-b pb-4">
         <h1 className="text-3xl font-bold text-primary">Painel Administrativo</h1>
          <Button variant="outline" onClick={handleLogout} size="sm">
             <LogOut className="mr-2 h-4 w-4" /> Sair
@@ -539,62 +548,69 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
       </div>
 
         <Tabs defaultValue="eventos" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="eventos">Gerenciar Eventos</TabsTrigger>
-                <TabsTrigger value="noticias">Gerenciar Notícias</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-secondary p-1 rounded-lg">
+                <TabsTrigger value="eventos" className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary">Gerenciar Eventos</TabsTrigger>
+                <TabsTrigger value="noticias" className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary">Gerenciar Notícias</TabsTrigger>
             </TabsList>
 
             {/* Eventos Tab */}
             <TabsContent value="eventos">
-                 <h2 className="text-2xl font-semibold text-primary mb-4">Eventos</h2>
-                {isEventFormOpen ? (
+                 <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-semibold text-primary">Eventos</h2>
+                     {!isEventFormOpen && (
+                        <Button onClick={handleAddNewEvento} className="bg-primary hover:bg-primary/90" aria-label="Adicionar novo evento">
+                            <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Evento
+                        </Button>
+                    )}
+                 </div>
+
+                {isEventFormOpen && ( // Conditionally render form above list when open
                     <EventForm
                     evento={editingEvento}
                     onSave={handleSaveEvento}
                     onCancel={() => { setIsEventFormOpen(false); setEditingEvento(null); }}
                     isSaving={isSavingEvento}
-                    adminPassword={adminPassword} // Pass password
+                    adminPassword={adminPassword}
                     />
-                ) : (
-                    <Button onClick={handleAddNewEvento} className="mb-6 bg-primary hover:bg-primary/90" aria-label="Adicionar novo evento">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Novo Evento
-                    </Button>
                 )}
 
-                <div className="mt-8 space-y-4">
-                    <h3 className="text-xl font-semibold">Eventos Cadastrados</h3>
+                <div className="mt-6 space-y-4">
+                    {/* <h3 className="text-xl font-semibold">Eventos Cadastrados</h3> */}
                      {loadingEventos ? renderLoadingState() :
                       errorEventos ? renderErrorState(errorEventos, fetchEventos, "Eventos") :
-                      eventos.length === 0 ? (
-                    <p className="text-muted-foreground">Nenhum evento cadastrado.</p>
+                      eventos.length === 0 && !isEventFormOpen ? ( // Show message only if no form is open
+                        <p className="text-center text-muted-foreground py-6">Nenhum evento cadastrado.</p>
                     ) : (
                     eventos.map((evento) => (
-                        <Card key={evento.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 gap-4 bg-card border shadow-sm">
+                        <Card key={evento.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 gap-4 bg-card border shadow-sm hover:shadow-md transition-shadow duration-150">
                         <div className="flex-grow space-y-1">
                             <p className="font-semibold text-primary">{evento.titulo}</p>
                             <p className="text-sm text-muted-foreground flex flex-wrap gap-x-4 gap-y-1">
-                                <span className="inline-flex items-center"><CalendarIcon className="h-3 w-3 mr-1"/> {evento.data}</span>
-                                <span className="inline-flex items-center"><Clock className="h-3 w-3 mr-1"/> {evento.horario}</span>
-                                <span className="inline-flex items-center"><MapPin className="h-3 w-3 mr-1"/> {evento.local}</span>
+                                <span className="inline-flex items-center"><CalendarIcon className="h-3 w-3 mr-1.5 text-muted-foreground"/> {evento.data}</span>
+                                <span className="inline-flex items-center"><Clock className="h-3 w-3 mr-1.5 text-muted-foreground"/> {evento.horario}</span>
+                                <span className="inline-flex items-center"><MapPin className="h-3 w-3 mr-1.5 text-muted-foreground"/> {evento.local}</span>
                             </p>
                         </div>
                         <div className="flex gap-2 flex-shrink-0 mt-2 sm:mt-0 self-end sm:self-center">
-                             <Button variant="outline" size="sm" onClick={() => handleEditEvento(evento)} aria-label={`Editar evento ${evento.titulo}`} disabled={!!deletingEventoId}>
+                             <Button variant="outline" size="icon" onClick={() => handleEditEvento(evento)} aria-label={`Editar evento ${evento.titulo}`} disabled={!!deletingEventoId} className="h-8 w-8">
                                 <Edit className="h-4 w-4" />
                             </Button>
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="sm" aria-label={`Excluir evento ${evento.titulo}`} disabled={deletingEventoId === evento.id}>
+                                    <Button variant="destructive" size="icon" aria-label={`Excluir evento ${evento.titulo}`} disabled={deletingEventoId === evento.id} className="h-8 w-8">
                                         {deletingEventoId === evento.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
-                                    <AlertDialogHeader><AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle><AlertDialogDescription>Tem certeza que deseja excluir o evento "{evento.titulo}"? Esta ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                        <AlertDialogDescription>Tem certeza que deseja excluir o evento "{evento.titulo}"? Esta ação não pode ser desfeita.</AlertDialogDescription>
+                                    </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                    <AlertDialogCancel disabled={!!deletingEventoId}>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDeleteEvento(evento.id)} className="bg-destructive hover:bg-destructive/90" disabled={!!deletingEventoId}>
-                                         {deletingEventoId === evento.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Excluir
-                                    </AlertDialogAction>
+                                        <AlertDialogCancel disabled={!!deletingEventoId}>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteEvento(evento.id)} className="bg-destructive hover:bg-destructive/90" disabled={!!deletingEventoId}>
+                                            {deletingEventoId === evento.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Excluir
+                                        </AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
@@ -607,61 +623,68 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
 
             {/* Noticias Tab */}
             <TabsContent value="noticias">
-                <h2 className="text-2xl font-semibold text-primary mb-4">Notícias</h2>
-                 {isNoticiaFormOpen ? (
+                 <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-semibold text-primary">Notícias</h2>
+                     {!isNoticiaFormOpen && (
+                         <Button onClick={handleAddNewNoticia} className="bg-primary hover:bg-primary/90" aria-label="Adicionar nova notícia">
+                            <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Notícia
+                        </Button>
+                    )}
+                 </div>
+
+                 {isNoticiaFormOpen && ( // Conditionally render form
                     <NoticiaForm
                         noticia={editingNoticia}
                         onSave={handleSaveNoticia}
                         onCancel={() => { setIsNoticiaFormOpen(false); setEditingNoticia(null); }}
                         isSaving={isSavingNoticia}
-                        adminPassword={adminPassword} // Pass password
+                        adminPassword={adminPassword}
                     />
-                 ) : (
-                     <Button onClick={handleAddNewNoticia} className="mb-6 bg-primary hover:bg-primary/90" aria-label="Adicionar nova notícia">
-                        <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Nova Notícia
-                    </Button>
                  )}
 
-                 <div className="mt-8 space-y-4">
-                     <h3 className="text-xl font-semibold">Notícias Cadastradas</h3>
+                 <div className="mt-6 space-y-4">
+                     {/* <h3 className="text-xl font-semibold">Notícias Cadastradas</h3> */}
                       {loadingNoticias ? renderLoadingState() :
                        errorNoticias ? renderErrorState(errorNoticias, fetchNoticias, "Notícias") :
-                       noticias.length === 0 ? (
-                        <p className="text-muted-foreground">Nenhuma notícia cadastrada.</p>
+                       noticias.length === 0 && !isNoticiaFormOpen ? ( // Show message only if no form is open
+                        <p className="text-center text-muted-foreground py-6">Nenhuma notícia cadastrada.</p>
                     ) : (
                        noticias.map((noticia) => (
-                        <Card key={noticia.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 gap-4 bg-card border shadow-sm">
+                        <Card key={noticia.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 gap-4 bg-card border shadow-sm hover:shadow-md transition-shadow duration-150">
                             {/* Image Thumbnail */}
                             <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 relative rounded overflow-hidden border bg-muted">
                                 <img
-                                    src={noticia.imagem || "https://via.placeholder.com/100/cccccc/000000?text=Sem+Imagem"}
+                                    src={noticia.imagem || "https://via.placeholder.com/100/e2e8f0/64748b?text=N/A"} // Updated placeholder color
                                     alt={`Imagem para ${noticia.titulo}`}
                                     className="w-full h-full object-cover"
-                                    // Consider adding error handling for images if needed
-                                    // onError={(e) => e.currentTarget.src = 'fallback-image-url'}
+                                    loading="lazy"
+                                    onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/100/fecaca/991b1b?text=Erro"; e.currentTarget.alt = "Erro ao carregar imagem"; }} // Basic image error handling
                                 />
                             </div>
                             {/* Content */}
                             <div className="flex-grow space-y-1">
                                 <p className="font-semibold text-primary">{noticia.titulo}</p>
-                                <p className="text-sm text-muted-foreground line-clamp-2">{noticia.texto}</p> {/* Limit text lines */}
+                                <p className="text-sm text-foreground line-clamp-2">{noticia.texto}</p> {/* Limit text lines */}
                                 <p className="text-xs text-muted-foreground flex items-center">
-                                    <CalendarIcon className="h-3 w-3 mr-1"/> {noticia.data}
+                                    <CalendarIcon className="h-3 w-3 mr-1.5 text-muted-foreground"/> {noticia.data}
                                 </p>
                             </div>
                             {/* Actions */}
                              <div className="flex gap-2 flex-shrink-0 mt-2 sm:mt-0 self-end sm:self-center">
-                                <Button variant="outline" size="sm" onClick={() => handleEditNoticia(noticia)} aria-label={`Editar notícia ${noticia.titulo}`} disabled={!!deletingNoticiaId}>
+                                <Button variant="outline" size="icon" onClick={() => handleEditNoticia(noticia)} aria-label={`Editar notícia ${noticia.titulo}`} disabled={!!deletingNoticiaId} className="h-8 w-8">
                                     <Edit className="h-4 w-4" />
                                 </Button>
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                         <Button variant="destructive" size="sm" aria-label={`Excluir notícia ${noticia.titulo}`} disabled={deletingNoticiaId === noticia.id}>
+                                         <Button variant="destructive" size="icon" aria-label={`Excluir notícia ${noticia.titulo}`} disabled={deletingNoticiaId === noticia.id} className="h-8 w-8">
                                             {deletingNoticiaId === noticia.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                         </Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
-                                        <AlertDialogHeader><AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle><AlertDialogDescription>Tem certeza que deseja excluir a notícia "{noticia.titulo}"? Esta ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                            <AlertDialogDescription>Tem certeza que deseja excluir a notícia "{noticia.titulo}"? Esta ação não pode ser desfeita.</AlertDialogDescription>
+                                        </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel disabled={!!deletingNoticiaId}>Cancelar</AlertDialogCancel>
                                             <AlertDialogAction onClick={() => handleDeleteNoticia(noticia.id)} className="bg-destructive hover:bg-destructive/90" disabled={!!deletingNoticiaId}>
@@ -686,46 +709,53 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [adminPassword, setAdminPassword] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(true); // General loading for the page logic
+  const [loading, setLoading] = React.useState(true);
 
-  // Callback for successful login
   const handleLoginSuccess = (password: string) => {
       setAdminPassword(password);
       setIsAuthenticated(true);
-       sessionStorage.setItem('estrelas_admin_loggedin', 'true');
-       sessionStorage.setItem('estrelas_admin_pwd', password); // Store password (use more secure method in production)
+      try {
+        // Use sessionStorage for simplicity in this example
+        sessionStorage.setItem('estrelas_admin_loggedin', 'true');
+        sessionStorage.setItem('estrelas_admin_pwd', password);
+      } catch (e) {
+          console.warn("Session storage is not available.");
+      }
   };
 
-   // Logout handler
   const handleLogout = () => {
     setIsAuthenticated(false);
     setAdminPassword(null);
-    sessionStorage.removeItem('estrelas_admin_loggedin');
-    sessionStorage.removeItem('estrelas_admin_pwd');
+     try {
+        sessionStorage.removeItem('estrelas_admin_loggedin');
+        sessionStorage.removeItem('estrelas_admin_pwd');
+     } catch (e) {
+         console.warn("Session storage is not available.");
+     }
   };
 
-   // Check session storage on mount
    React.useEffect(() => {
       setLoading(true);
-      const loggedIn = sessionStorage.getItem('estrelas_admin_loggedin') === 'true';
-      const storedPassword = sessionStorage.getItem('estrelas_admin_pwd');
-      if (loggedIn && storedPassword) {
-          // Optionally, verify password against env var again here for extra safety
+      try {
+          const loggedIn = sessionStorage.getItem('estrelas_admin_loggedin') === 'true';
+          const storedPassword = sessionStorage.getItem('estrelas_admin_pwd');
           const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "estrelas123";
-          if (storedPassword === correctPassword) {
-            setIsAuthenticated(true);
-            setAdminPassword(storedPassword);
-          } else {
-              // Clear invalid session storage if password doesn't match env var
+
+          if (loggedIn && storedPassword && storedPassword === correctPassword) {
+              setIsAuthenticated(true);
+              setAdminPassword(storedPassword);
+          } else if (loggedIn) {
+              // If logged in state is true but password doesn't match, logout
               handleLogout();
           }
+      } catch (e) {
+         console.warn("Session storage is not available. Cannot check login state.");
       }
       setLoading(false);
    }, []);
 
 
   if (loading) {
-      // Basic full page loader while checking session
       return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
@@ -733,8 +763,6 @@ export default function AdminPage() {
     return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // If authenticated, show dashboard
+  // Pass confirmed password to Dashboard
   return <AdminDashboard adminPassword={adminPassword} onLogout={handleLogout} />;
 }
-
-    

@@ -4,39 +4,28 @@ import type {NextConfig} from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    unoptimized: false, // Ensure optimization is generally ON
+    unoptimized: false, // Keep optimization ON
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'picsum.photos',
+        hostname: 'picsum.photos', // Example placeholder
         port: '',
         pathname: '/**',
       },
-      { // Add Firebase Storage domain (if still needed for other images)
-        protocol: 'https',
-        hostname: 'firebasestorage.googleapis.com',
-        port: '',
-        pathname: '/v0/b/**',
-      },
-      { // Add via.placeholder.com for sample news images
+      { // Add placeholder domain
         protocol: 'https',
         hostname: 'via.placeholder.com',
         port: '',
         pathname: '/**',
       },
-      { // Added Unsplash for hero background (pollinations.ai is used now)
-        protocol: 'https',
-        hostname: 'images.unsplash.com', // Keep if needed, otherwise remove
-        port: '',
-        pathname: '/**',
-      },
-       { // Added pollinations.ai for hero background
+      { // Add pollinations.ai for hero
         protocol: 'https',
         hostname: 'image.pollinations.ai',
         port: '',
         pathname: '/**',
       },
-       { // Added sample image domains for Apresentacao/Locais
+       // Add other domains for static/sample images if needed
+       {
         protocol: 'https',
         hostname: 'videos.openai.com',
         port: '',
@@ -48,16 +37,19 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Add Supabase storage domain if images will be stored there
+      // Example: { protocol: 'https', hostname: 'your-supabase-project-id.supabase.co', port: '', pathname: '/storage/v1/object/public/**' }
     ],
   },
   env: {
-     // Make API URL available client-side if needed (e.g., for direct calls outside getStaticProps/getServerSideProps)
-     // Ensure this doesn't expose sensitive keys
-     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://estrelas-backend.onrender.com',
-     NEXT_PUBLIC_ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'estrelas123', // Make admin password available for client-side checks (use with caution)
+     // Make API URL available client-side. Vercel automatically provides VERCEL_URL.
+     // Fallback to a sensible default for local dev or if VERCEL_URL is not set.
+     NEXT_PUBLIC_API_URL: process.env.VERCEL_URL
+       ? `https://${process.env.VERCEL_URL}`
+       : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', // Default for local dev
+
+     NEXT_PUBLIC_ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'estrelas123', // Make admin password available client-side (use with caution)
   }
 };
 
 export default nextConfig;
-
-    

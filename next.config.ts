@@ -1,30 +1,33 @@
 
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    unoptimized: false, // Keep optimization ON
+    unoptimized: false, // Keep optimization ON unless specific sources require it
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'picsum.photos', // Example placeholder
+        hostname: 'via.placeholder.com', // Placeholder domain
         port: '',
         pathname: '/**',
       },
-      { // Add placeholder domain
+      {
         protocol: 'https',
-        hostname: 'via.placeholder.com',
+        hostname: 'image.pollinations.ai', // Domain for hero image source
         port: '',
         pathname: '/**',
       },
-      { // Add pollinations.ai for hero
-        protocol: 'https',
-        hostname: 'image.pollinations.ai',
-        port: '',
-        pathname: '/**',
-      },
-       // Add other domains for static/sample images if needed
+      // Add any other image domains used (e.g., Supabase Storage if applicable)
+      // Example for Supabase:
+      // {
+      //   protocol: 'https',
+      //   // Replace with your actual Supabase project hostname
+      //   hostname: 'your-project-ref.supabase.co',
+      //   port: '',
+      //   pathname: '/storage/v1/object/public/**',
+      // },
+      // Example domains from previous state (keep if still needed)
        {
         protocol: 'https',
         hostname: 'videos.openai.com',
@@ -33,22 +36,26 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'tse1.mm.bing.net',
+        hostname: 'tse*.mm.bing.net', // Use wildcard for TSE domains
         port: '',
         pathname: '/**',
       },
-      // Add Supabase storage domain if images will be stored there
-      // Example: { protocol: 'https', hostname: 'your-supabase-project-id.supabase.co', port: '', pathname: '/storage/v1/object/public/**' }
+
     ],
   },
   env: {
-     // Make API URL available client-side. Vercel automatically provides VERCEL_URL.
-     // Fallback to a sensible default for local dev or if VERCEL_URL is not set.
-     NEXT_PUBLIC_API_URL: process.env.VERCEL_URL
-       ? `https://${process.env.VERCEL_URL}`
-       : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', // Default for local dev
+     // Make API URL available client-side. Vercel automatically provides VERCEL_URL
+     // which points to the frontend deployment URL. We need the *backend* URL.
+     // Set NEXT_PUBLIC_API_URL in Vercel Environment Variables for the frontend.
+     // This env var should point to the backend deployment URL (e.g., your Vercel backend function URL or Render URL).
+     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
 
-     NEXT_PUBLIC_ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'estrelas123', // Make admin password available client-side (use with caution)
+     // Make admin password available client-side for the login check.
+     // Set ADMIN_PASSWORD in Vercel Environment Variables. Use NEXT_PUBLIC_ prefix
+     // if the check truly needs to happen client-side (less secure).
+     // If check happens server-side (e.g., in API routes), just ADMIN_PASSWORD is fine.
+     // For this setup where login happens client-side:
+     NEXT_PUBLIC_ADMIN_PASSWORD: process.env.ADMIN_PASSWORD, // Renamed from ADMIN_PASSWORD to NEXT_PUBLIC_ADMIN_PASSWORD for clarity
   }
 };
 

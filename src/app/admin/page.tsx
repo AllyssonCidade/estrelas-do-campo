@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
     getAllEventosCMSApi, addEventoApi, updateEventoApi, deleteEventoApi,
     getAllNoticiasCMSApi, addNoticiaApi, updateNoticiaApi, deleteNoticiaApi
-} from '@/lib/api';
+} from '@/lib/api'; // Assuming api.ts is updated for Noticias as well
 import type { Evento, Noticia } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,14 +20,14 @@ import { Calendar } from '@/components/ui/calendar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, parse, isValid } from 'date-fns';
-import { isValidUrl } from '@/lib/validation'; // Import URL validation helper
+import { isValidUrl, isValidDateString, isValidTimeString } from '@/lib/validation'; // Import validation helpers
 
 // --- Admin Login Component ---
 function AdminLogin({ onLoginSuccess }: { onLoginSuccess: (password: string) => void }) {
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState('');
   const [loading, setLoading] = React.useState(false);
-  // Use environment variable for password check
+  // Use environment variable for password check (ensure NEXT_PUBLIC_ prefix if used client-side)
   const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "estrelas123";
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -35,7 +35,7 @@ function AdminLogin({ onLoginSuccess }: { onLoginSuccess: (password: string) => 
     setError('');
     setLoading(true);
 
-    // Basic check (consider a more secure method for real apps)
+    // Basic check
     if (password === correctPassword) {
        onLoginSuccess(password); // Pass password for API calls
     } else {
@@ -76,13 +76,11 @@ function AdminLogin({ onLoginSuccess }: { onLoginSuccess: (password: string) => 
   );
 }
 
-// --- Helper: Parse Date String ---
+// --- Helper: Parse Date String DD/MM/YYYY to Date object ---
 const parseDateString = (dateStr: string | undefined): Date | undefined => {
-  if (!dateStr) return undefined;
+  if (!dateStr || !isValidDateString(dateStr)) return undefined;
   try {
-    // Use parse correctly: string, format, referenceDate
     const parsedDate = parse(dateStr, 'dd/MM/yyyy', new Date());
-    // Check if the parsed date is valid
     return isValid(parsedDate) ? parsedDate : undefined;
   } catch {
     return undefined;
@@ -95,7 +93,7 @@ type EventFormProps = {
   onSave: (eventoData: Omit<Evento, 'id'> | Evento, password: string) => Promise<void>;
   onCancel: () => void;
   isSaving: boolean;
-  adminPassword?: string | null;
+  adminPassword?: string | null; // Receive admin password as prop
 };
 
 function EventForm({ evento, onSave, onCancel, isSaving, adminPassword }: EventFormProps) {
@@ -107,11 +105,12 @@ function EventForm({ evento, onSave, onCancel, isSaving, adminPassword }: EventF
   const { toast } = useToast();
 
   React.useEffect(() => {
+      // Reset form when 'evento' prop changes
       setTitulo(evento?.titulo || '');
       setData(parseDateString(evento?.data));
       setHorario(evento?.horario || '');
       setLocal(evento?.local || '');
-      setFormError('');
+      setFormError(''); // Clear previous errors
   }, [evento]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,6 +123,7 @@ function EventForm({ evento, onSave, onCancel, isSaving, adminPassword }: EventF
         return;
     }
 
+    // Client-side Validation
     if (!titulo || !data || !horario || !local) {
       setFormError('Todos os campos são obrigatórios.');
       return;
@@ -136,20 +136,20 @@ function EventForm({ evento, onSave, onCancel, isSaving, adminPassword }: EventF
         setFormError('Local não pode exceder 100 caracteres.');
         return;
     }
-    if (!/^\d{2}:\d{2}$/.test(horario)) {
+    if (!isValidTimeString(horario)) { // Use validation helper
       setFormError('Formato de horário inválido. Use HH:MM (ex: 16:00).');
       return;
     }
 
     const formattedDate = format(data, 'dd/MM/yyyy');
-    // Double check format just in case
-    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formattedDate)) {
+    if (!isValidDateString(formattedDate)) { // Use validation helper
         setFormError('Data inválida. Use o formato DD/MM/YYYY.');
         return;
     }
 
+    // Prepare data, including id only if updating
     const eventoData: Omit<Evento, 'id'> | Evento = {
-      ...(evento && { id: evento.id }),
+      ...(evento?.id && { id: evento.id }), // Include id only if it exists (update)
       titulo,
       data: formattedDate,
       horario,
@@ -157,20 +157,21 @@ function EventForm({ evento, onSave, onCancel, isSaving, adminPassword }: EventF
     };
 
     try {
-        await onSave(eventoData, adminPassword); // Pass password
-        // Success handled by parent component's toast
+        await onSave(eventoData, adminPassword); // Pass password to API call
+        // Success toast/handling is done in the parent component after calling fetchEventos
     } catch (error: any) {
-        // Error should be shown via toast in the parent, but set local error state too
-        setFormError(error.message || "Erro desconhecido ao salvar evento.");
-        // Optional: Show toast here as well if parent doesn't always handle it
-        // toast({ variant: "destructive", title: "Erro ao Salvar", description: error.message || "Tente novamente." });
+        // Display error from API call
+        const apiErrorMessage = error.message || "Erro desconhecido ao salvar evento.";
+        setFormError(apiErrorMessage);
+        // Optional: Show toast here if parent doesn't always handle it
+        // toast({ variant: "destructive", title: "Erro ao Salvar Evento", description: apiErrorMessage });
     }
   };
 
   return (
      <Card className="mb-6 shadow-md border">
        <CardHeader>
-        <CardTitle className="text-primary">{evento ? 'Editar Evento' : 'Adicionar Novo Evento'}</CardTitle>
+        <CardTitle className="text-primary">{evento?.id ? 'Editar Evento' : 'Adicionar Novo Evento'}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
          <CardContent className="space-y-4">
@@ -191,7 +192,6 @@ function EventForm({ evento, onSave, onCancel, isSaving, adminPassword }: EventF
                             aria-required="true"
                         >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {/* Ensure data is a valid Date before formatting */}
                             {data instanceof Date && isValid(data) ? format(data, "dd/MM/yyyy") : <span>Escolha uma data</span>}
                         </Button>
                         </PopoverTrigger>
@@ -216,7 +216,7 @@ function EventForm({ evento, onSave, onCancel, isSaving, adminPassword }: EventF
             </Button>
             <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isSaving}>
                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {evento ? 'Salvar Alterações' : 'Adicionar Evento'}
+                {evento?.id ? 'Salvar Alterações' : 'Adicionar Evento'}
             </Button>
         </CardFooter>
       </form>
@@ -231,7 +231,7 @@ type NoticiaFormProps = {
   onSave: (noticiaData: Omit<Noticia, 'id'> | Noticia, password: string) => Promise<void>;
   onCancel: () => void;
   isSaving: boolean;
-  adminPassword?: string | null;
+  adminPassword?: string | null; // Receive admin password as prop
 };
 
 function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: NoticiaFormProps) {
@@ -243,11 +243,12 @@ function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: Not
   const { toast } = useToast();
 
   React.useEffect(() => {
+      // Reset form when 'noticia' prop changes
       setTitulo(noticia?.titulo || '');
       setTexto(noticia?.texto || '');
       setImagem(noticia?.imagem || '');
       setData(parseDateString(noticia?.data));
-      setFormError('');
+      setFormError(''); // Clear previous errors
   }, [noticia]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -260,6 +261,7 @@ function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: Not
         return;
     }
 
+    // Client-side Validation
     if (!titulo || !texto || !imagem || !data) {
       setFormError('Todos os campos são obrigatórios.');
       return;
@@ -268,7 +270,7 @@ function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: Not
         setFormError('Título não pode exceder 100 caracteres.');
         return;
     }
-     if (!isValidUrl(imagem)) {
+     if (!isValidUrl(imagem)) { // Use validation helper
       setFormError('URL da imagem inválida. Use o formato http:// ou https://...');
       return;
     }
@@ -278,13 +280,14 @@ function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: Not
     }
 
      const formattedDate = format(data, 'dd/MM/yyyy');
-     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formattedDate)) {
+     if (!isValidDateString(formattedDate)) { // Use validation helper
         setFormError('Data inválida. Use o formato DD/MM/YYYY.');
         return;
     }
 
+    // Prepare data, include id only if updating
     const noticiaData: Omit<Noticia, 'id'> | Noticia = {
-      ...(noticia && { id: noticia.id }),
+      ...(noticia?.id && { id: noticia.id }), // Include id only if updating
       titulo,
       texto,
       imagem,
@@ -292,19 +295,19 @@ function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: Not
     };
 
     try {
-      await onSave(noticiaData, adminPassword); // Pass password
-      // Success toast handled by parent
+      await onSave(noticiaData, adminPassword); // Pass password to API call
+      // Success toast/handling done in parent component
     } catch (error: any) {
-       setFormError(error.message || "Erro desconhecido ao salvar notícia.");
-       // Optional: Show toast here as well if parent doesn't always handle it
-       // toast({ variant: "destructive", title: "Erro ao Salvar Notícia", description: error.message || "Tente novamente." });
+       const apiErrorMessage = error.message || "Erro desconhecido ao salvar notícia.";
+       setFormError(apiErrorMessage);
+       // Optional: toast({ variant: "destructive", title: "Erro ao Salvar Notícia", description: apiErrorMessage });
     }
   };
 
   return (
     <Card className="mb-6 shadow-md border">
        <CardHeader>
-        <CardTitle className="text-primary">{noticia ? 'Editar Notícia' : 'Adicionar Nova Notícia'}</CardTitle>
+        <CardTitle className="text-primary">{noticia?.id ? 'Editar Notícia' : 'Adicionar Nova Notícia'}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
          <CardContent className="space-y-4">
@@ -320,7 +323,7 @@ function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: Not
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <div className="space-y-1">
                     <Label htmlFor="nt-imagem">URL da Imagem</Label>
-                    <Input id="nt-imagem" type="url" value={imagem} onChange={(e) => setImagem(e.target.value)} placeholder="https://..." required aria-required="true" title="Insira uma URL válida começando com http:// or https://" maxLength={255} />
+                    <Input id="nt-imagem" type="url" value={imagem} onChange={(e) => setImagem(e.target.value)} placeholder="https://..." required aria-required="true" title="Insira uma URL válida começando com http:// ou https://" maxLength={255} />
                  </div>
                  <div className="space-y-1">
                     <Label htmlFor="nt-data">Data (DD/MM/YYYY)</Label>
@@ -349,7 +352,7 @@ function NoticiaForm({ noticia, onSave, onCancel, isSaving, adminPassword }: Not
             </Button>
             <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isSaving}>
                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {noticia ? 'Salvar Alterações' : 'Adicionar Notícia'}
+                {noticia?.id ? 'Salvar Alterações' : 'Adicionar Notícia'}
             </Button>
         </CardFooter>
       </form>
@@ -383,47 +386,57 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
 
   // --- Fetch Data ---
   const fetchEventos = React.useCallback(async () => {
+    console.log("Admin: Fetching events...");
     setLoadingEventos(true);
     setErrorEventos(null);
     try {
-      // Pass password via header for GET requests needing auth (if applicable)
-      // Or rely on session/token if implemented differently.
-      // For simple password, GET might not need it, but keep fetch logic consistent.
-      const data = await getAllEventosCMSApi(); // Assumes GET doesn't need pwd
+      // Use the CMS API endpoint which fetches all events
+      const data = await getAllEventosCMSApi();
       setEventos(data);
+       console.log(`Admin: Fetched ${data.length} events.`);
     } catch (error: any) {
-       setErrorEventos(error.message || "Não foi possível carregar os eventos.");
-       toast({ variant: "destructive", title: "Erro ao Carregar Eventos", description: error.message });
+       const errorMessage = error.message || "Não foi possível carregar os eventos.";
+       setErrorEventos(errorMessage);
+       toast({ variant: "destructive", title: "Erro ao Carregar Eventos", description: errorMessage });
+       console.error("Admin: Error fetching events:", errorMessage);
     } finally {
       setLoadingEventos(false);
     }
   }, [toast]); // Added toast dependency
 
    const fetchNoticias = React.useCallback(async () => {
+     console.log("Admin: Fetching noticias...");
     setLoadingNoticias(true);
     setErrorNoticias(null);
     try {
-      const data = await getAllNoticiasCMSApi(); // Assumes GET doesn't need pwd
+      // Use the CMS API endpoint for all noticias
+      const data = await getAllNoticiasCMSApi();
       setNoticias(data);
+      console.log(`Admin: Fetched ${data.length} noticias.`);
     } catch (error: any) {
-       setErrorNoticias(error.message || "Não foi possível carregar as notícias.");
-       toast({ variant: "destructive", title: "Erro ao Carregar Notícias", description: error.message });
+       const errorMessage = error.message || "Não foi possível carregar as notícias.";
+       setErrorNoticias(errorMessage);
+       toast({ variant: "destructive", title: "Erro ao Carregar Notícias", description: errorMessage });
+       console.error("Admin: Error fetching noticias:", errorMessage);
     } finally {
       setLoadingNoticias(false);
     }
   }, [toast]); // Added toast dependency
 
   React.useEffect(() => {
-    // Fetch data only if authenticated
+    // Fetch data only if authenticated with a valid password
     if (adminPassword) {
         fetchEventos();
         fetchNoticias();
+    } else {
+        console.warn("Admin: Attempted to fetch data without password.");
+        // Optionally redirect or show an error if password is unexpectedly missing
     }
   }, [adminPassword, fetchEventos, fetchNoticias]); // Rerun if password changes or fetch functions change
 
   // --- Event Handlers ---
   const handleLogout = () => {
-    onLogout(); // Call parent logout handler
+    onLogout(); // Call parent logout handler (clears session storage)
     router.push('/'); // Redirect to home after logout
   };
 
@@ -431,6 +444,10 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
   const handleAddNewEvento = () => { setEditingEvento(null); setIsEventFormOpen(true); };
   const handleEditEvento = (evento: Evento) => { setEditingEvento(evento); setIsEventFormOpen(true); };
   const handleDeleteEvento = async (id: number | string) => {
+     if (!adminPassword) {
+        toast({ variant: "destructive", title: "Erro de Autenticação", description: "Senha necessária para deletar." });
+        return;
+    }
     setDeletingEventoId(id);
     try {
       await deleteEventoApi(id, adminPassword); // Pass password
@@ -445,7 +462,7 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
   const handleSaveEvento = async (eventoData: Omit<Evento, 'id'> | Evento, password: string) => {
     setIsSavingEvento(true);
     try {
-       // Extract only necessary fields, ensuring no extra properties are sent
+       // Ensure data is clean before sending
        const dataToSend: Omit<Evento, 'id'> = {
           titulo: eventoData.titulo,
           data: eventoData.data,
@@ -454,18 +471,22 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
        };
 
       if ('id' in eventoData && eventoData.id) {
-        await updateEventoApi(eventoData.id, dataToSend, password); // Use dataToSend
+        // Update existing event
+        await updateEventoApi(eventoData.id, dataToSend, password);
         toast({ title: "Sucesso", description: "Evento atualizado." });
       } else {
-        await addEventoApi(dataToSend, password); // Use dataToSend
+        // Add new event
+        await addEventoApi(dataToSend, password);
         toast({ title: "Sucesso", description: "Evento adicionado." });
       }
       setIsEventFormOpen(false);
       setEditingEvento(null);
       fetchEventos(); // Refresh list
     } catch (error: any) {
+       // Let the form display the error via its state
+       console.error("Error saving event in dashboard handler:", error);
        toast({ variant: "destructive", title: "Erro ao Salvar Evento", description: error.message });
-       throw error; // Re-throw to allow form to potentially handle it
+       throw error; // Re-throw to signal error to the form
     } finally {
       setIsSavingEvento(false);
     }
@@ -475,6 +496,10 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
   const handleAddNewNoticia = () => { setEditingNoticia(null); setIsNoticiaFormOpen(true); };
   const handleEditNoticia = (noticia: Noticia) => { setEditingNoticia(noticia); setIsNoticiaFormOpen(true); };
   const handleDeleteNoticia = async (id: number | string) => {
+     if (!adminPassword) {
+        toast({ variant: "destructive", title: "Erro de Autenticação", description: "Senha necessária para deletar." });
+        return;
+    }
     setDeletingNoticiaId(id);
     try {
       await deleteNoticiaApi(id, adminPassword); // Pass password
@@ -489,6 +514,7 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
  const handleSaveNoticia = async (noticiaData: Omit<Noticia, 'id'> | Noticia, password: string) => {
     setIsSavingNoticia(true);
     try {
+        // Ensure clean data
         const dataToSend: Omit<Noticia, 'id'> = {
             titulo: noticiaData.titulo,
             texto: noticiaData.texto,
@@ -497,18 +523,22 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
         };
 
         if ('id' in noticiaData && noticiaData.id) {
-            await updateNoticiaApi(noticiaData.id, dataToSend, password); // Use dataToSend
+            // Update existing noticia
+            await updateNoticiaApi(noticiaData.id, dataToSend, password);
             toast({ title: "Sucesso", description: "Notícia atualizada." });
         } else {
-            await addNoticiaApi(dataToSend, password); // Use dataToSend
+            // Add new noticia
+            await addNoticiaApi(dataToSend, password);
             toast({ title: "Sucesso", description: "Notícia adicionada." });
         }
         setIsNoticiaFormOpen(false);
         setEditingNoticia(null);
         fetchNoticias(); // Refresh list
     } catch (error: any) {
-        toast({ variant: "destructive", title: "Erro ao Salvar Notícia", description: error.message });
-        throw error; // Re-throw
+       // Let the form display the error
+       console.error("Error saving noticia in dashboard handler:", error);
+       toast({ variant: "destructive", title: "Erro ao Salvar Notícia", description: error.message });
+       throw error; // Re-throw
     } finally {
         setIsSavingNoticia(false);
     }
@@ -518,8 +548,8 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
    const renderLoadingState = (count = 3) => (
      <div className="space-y-3">
        {[...Array(count)].map((_, i) => (
-          // Simple placeholder div
-         <div key={i} className="h-24 w-full rounded-lg bg-muted/60 animate-pulse border p-4"></div>
+         // Simple placeholder div - Use Tailwind classes directly
+         <div key={i} className="h-20 w-full rounded-lg bg-muted/60 animate-pulse border p-4 shadow-sm"></div>
        ))}
      </div>
    );
@@ -542,11 +572,12 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
     <div className="container mx-auto max-w-4xl py-8 px-4">
        <div className="flex justify-between items-center mb-6 border-b pb-4">
         <h1 className="text-3xl font-bold text-primary">Painel Administrativo</h1>
-         <Button variant="outline" onClick={handleLogout} size="sm">
+         <Button variant="outline" onClick={handleLogout} size="sm" aria-label="Sair do painel administrativo">
             <LogOut className="mr-2 h-4 w-4" /> Sair
          </Button>
       </div>
 
+        {/* Tabs for Eventos and Noticias */}
         <Tabs defaultValue="eventos" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-secondary p-1 rounded-lg">
                 <TabsTrigger value="eventos" className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary">Gerenciar Eventos</TabsTrigger>
@@ -557,6 +588,7 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
             <TabsContent value="eventos">
                  <div className="flex justify-between items-center mb-4">
                     <h2 className="text-2xl font-semibold text-primary">Eventos</h2>
+                     {/* Show Add button only if form is not open */}
                      {!isEventFormOpen && (
                         <Button onClick={handleAddNewEvento} className="bg-primary hover:bg-primary/90" aria-label="Adicionar novo evento">
                             <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Evento
@@ -564,18 +596,19 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
                     )}
                  </div>
 
-                {isEventFormOpen && ( // Conditionally render form above list when open
+                {/* Event Form (conditionally rendered) */}
+                {isEventFormOpen && (
                     <EventForm
                     evento={editingEvento}
                     onSave={handleSaveEvento}
                     onCancel={() => { setIsEventFormOpen(false); setEditingEvento(null); }}
                     isSaving={isSavingEvento}
-                    adminPassword={adminPassword}
+                    adminPassword={adminPassword} // Pass the confirmed password
                     />
                 )}
 
+                {/* Event List */}
                 <div className="mt-6 space-y-4">
-                    {/* <h3 className="text-xl font-semibold">Eventos Cadastrados</h3> */}
                      {loadingEventos ? renderLoadingState() :
                       errorEventos ? renderErrorState(errorEventos, fetchEventos, "Eventos") :
                       eventos.length === 0 && !isEventFormOpen ? ( // Show message only if no form is open
@@ -592,12 +625,14 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
                             </p>
                         </div>
                         <div className="flex gap-2 flex-shrink-0 mt-2 sm:mt-0 self-end sm:self-center">
-                             <Button variant="outline" size="icon" onClick={() => handleEditEvento(evento)} aria-label={`Editar evento ${evento.titulo}`} disabled={!!deletingEventoId} className="h-8 w-8">
+                            {/* Edit Button */}
+                             <Button variant="outline" size="icon" onClick={() => handleEditEvento(evento)} aria-label={`Editar evento ${evento.titulo}`} disabled={!!deletingEventoId || isEventFormOpen} className="h-8 w-8">
                                 <Edit className="h-4 w-4" />
                             </Button>
+                            {/* Delete Button */}
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="icon" aria-label={`Excluir evento ${evento.titulo}`} disabled={deletingEventoId === evento.id} className="h-8 w-8">
+                                    <Button variant="destructive" size="icon" aria-label={`Excluir evento ${evento.titulo}`} disabled={deletingEventoId === evento.id || isEventFormOpen} className="h-8 w-8">
                                         {deletingEventoId === evento.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                     </Button>
                                 </AlertDialogTrigger>
@@ -625,6 +660,7 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
             <TabsContent value="noticias">
                  <div className="flex justify-between items-center mb-4">
                     <h2 className="text-2xl font-semibold text-primary">Notícias</h2>
+                     {/* Show Add button only if form is not open */}
                      {!isNoticiaFormOpen && (
                          <Button onClick={handleAddNewNoticia} className="bg-primary hover:bg-primary/90" aria-label="Adicionar nova notícia">
                             <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Notícia
@@ -632,18 +668,19 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
                     )}
                  </div>
 
-                 {isNoticiaFormOpen && ( // Conditionally render form
+                 {/* Noticia Form (conditionally rendered) */}
+                 {isNoticiaFormOpen && (
                     <NoticiaForm
                         noticia={editingNoticia}
                         onSave={handleSaveNoticia}
                         onCancel={() => { setIsNoticiaFormOpen(false); setEditingNoticia(null); }}
                         isSaving={isSavingNoticia}
-                        adminPassword={adminPassword}
+                        adminPassword={adminPassword} // Pass the confirmed password
                     />
                  )}
 
+                {/* Noticia List */}
                  <div className="mt-6 space-y-4">
-                     {/* <h3 className="text-xl font-semibold">Notícias Cadastradas</h3> */}
                       {loadingNoticias ? renderLoadingState() :
                        errorNoticias ? renderErrorState(errorNoticias, fetchNoticias, "Notícias") :
                        noticias.length === 0 && !isNoticiaFormOpen ? ( // Show message only if no form is open
@@ -653,30 +690,33 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
                         <Card key={noticia.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 gap-4 bg-card border shadow-sm hover:shadow-md transition-shadow duration-150">
                             {/* Image Thumbnail */}
                             <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 relative rounded overflow-hidden border bg-muted">
+                                {/* Use next/image if optimization is needed, otherwise standard img */}
                                 <img
-                                    src={noticia.imagem || "https://via.placeholder.com/100/e2e8f0/64748b?text=N/A"} // Updated placeholder color
+                                    src={noticia.imagem || "https://via.placeholder.com/100/e2e8f0/64748b?text=N/A"}
                                     alt={`Imagem para ${noticia.titulo}`}
                                     className="w-full h-full object-cover"
-                                    loading="lazy"
-                                    onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/100/fecaca/991b1b?text=Erro"; e.currentTarget.alt = "Erro ao carregar imagem"; }} // Basic image error handling
+                                    loading="lazy" // Basic lazy loading
+                                    onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/100/fecaca/991b1b?text=Erro"; e.currentTarget.alt = "Erro ao carregar imagem"; }}
                                 />
                             </div>
                             {/* Content */}
                             <div className="flex-grow space-y-1">
                                 <p className="font-semibold text-primary">{noticia.titulo}</p>
-                                <p className="text-sm text-foreground line-clamp-2">{noticia.texto}</p> {/* Limit text lines */}
+                                <p className="text-sm text-foreground line-clamp-2">{noticia.texto}</p>
                                 <p className="text-xs text-muted-foreground flex items-center">
                                     <CalendarIcon className="h-3 w-3 mr-1.5 text-muted-foreground"/> {noticia.data}
                                 </p>
                             </div>
                             {/* Actions */}
                              <div className="flex gap-2 flex-shrink-0 mt-2 sm:mt-0 self-end sm:self-center">
-                                <Button variant="outline" size="icon" onClick={() => handleEditNoticia(noticia)} aria-label={`Editar notícia ${noticia.titulo}`} disabled={!!deletingNoticiaId} className="h-8 w-8">
+                                {/* Edit Button */}
+                                <Button variant="outline" size="icon" onClick={() => handleEditNoticia(noticia)} aria-label={`Editar notícia ${noticia.titulo}`} disabled={!!deletingNoticiaId || isNoticiaFormOpen} className="h-8 w-8">
                                     <Edit className="h-4 w-4" />
                                 </Button>
+                                 {/* Delete Button */}
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                         <Button variant="destructive" size="icon" aria-label={`Excluir notícia ${noticia.titulo}`} disabled={deletingNoticiaId === noticia.id} className="h-8 w-8">
+                                         <Button variant="destructive" size="icon" aria-label={`Excluir notícia ${noticia.titulo}`} disabled={deletingNoticiaId === noticia.id || isNoticiaFormOpen} className="h-8 w-8">
                                             {deletingNoticiaId === noticia.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                         </Button>
                                     </AlertDialogTrigger>
@@ -709,20 +749,23 @@ function AdminDashboard({ adminPassword, onLogout }: { adminPassword: string, on
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [adminPassword, setAdminPassword] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(true); // Initial loading state for checking auth
 
+  // Function to handle successful login
   const handleLoginSuccess = (password: string) => {
-      setAdminPassword(password);
+      setAdminPassword(password); // Store the confirmed password
       setIsAuthenticated(true);
       try {
-        // Use sessionStorage for simplicity in this example
+        // Use sessionStorage for simplicity to remember login state across refreshes (but not closing browser)
+        // NOTE: sessionStorage is cleared when the browser tab is closed. Use localStorage for more persistence.
         sessionStorage.setItem('estrelas_admin_loggedin', 'true');
-        sessionStorage.setItem('estrelas_admin_pwd', password);
+        sessionStorage.setItem('estrelas_admin_pwd', password); // Store password to re-validate on reload
       } catch (e) {
-          console.warn("Session storage is not available.");
+          console.warn("Session storage is not available. Login state won't persist across page reloads.");
       }
   };
 
+  // Function to handle logout
   const handleLogout = () => {
     setIsAuthenticated(false);
     setAdminPassword(null);
@@ -732,37 +775,52 @@ export default function AdminPage() {
      } catch (e) {
          console.warn("Session storage is not available.");
      }
+     // Optionally, redirect to home or login page after logout
+     // useRouter().push('/');
   };
 
+   // Check authentication status on component mount
    React.useEffect(() => {
       setLoading(true);
+      let loggedIn = false;
+      let storedPassword = null;
       try {
-          const loggedIn = sessionStorage.getItem('estrelas_admin_loggedin') === 'true';
-          const storedPassword = sessionStorage.getItem('estrelas_admin_pwd');
-          const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "estrelas123";
-
-          if (loggedIn && storedPassword && storedPassword === correctPassword) {
-              setIsAuthenticated(true);
-              setAdminPassword(storedPassword);
-          } else if (loggedIn) {
-              // If logged in state is true but password doesn't match, logout
-              handleLogout();
-          }
+          loggedIn = sessionStorage.getItem('estrelas_admin_loggedin') === 'true';
+          storedPassword = sessionStorage.getItem('estrelas_admin_pwd');
       } catch (e) {
-         console.warn("Session storage is not available. Cannot check login state.");
+         console.warn("Session storage is not available. Cannot check persistent login state.");
       }
-      setLoading(false);
-   }, []);
+
+      // Get the correct password (could be from env var)
+      const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "estrelas123";
+
+      // Validate stored credentials
+      if (loggedIn && storedPassword && storedPassword === correctPassword) {
+          setIsAuthenticated(true);
+          setAdminPassword(storedPassword); // Set the password from storage
+      } else {
+           // If loggedIn state is true but password doesn't match, or no password stored, force logout
+           if (loggedIn) {
+               handleLogout(); // Clear invalid session state
+           }
+           setIsAuthenticated(false);
+           setAdminPassword(null);
+      }
+      setLoading(false); // Finished checking auth state
+   }, []); // Empty dependency array runs only once on mount
 
 
+  // Show loading indicator while checking auth state
   if (loading) {
       return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
+  // If not authenticated, show the login form
   if (!isAuthenticated || !adminPassword) {
     return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // Pass confirmed password to Dashboard
+  // If authenticated, show the Admin Dashboard
+  // Pass the confirmed admin password to the dashboard for API calls
   return <AdminDashboard adminPassword={adminPassword} onLogout={handleLogout} />;
 }

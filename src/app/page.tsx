@@ -1,12 +1,12 @@
 
 'use client'; // Mark as client component for hooks and animations
 
-import * as React from 'react'; // Import React for useEffect/useState
-import { getEventosApi } from '@/lib/api'; // Import API function
+import * as React from 'react';
+import { getEventosApi } from '@/lib/api'; // Import API function for events
 import type { Evento } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, Clock, MapPin, Map, Building, Loader2, AlertCircle } from 'lucide-react'; // Added Loader2, AlertCircle
+import { CalendarDays, Clock, MapPin, Map, Building, Loader2, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import { motion } from 'framer-motion'; // Import motion for animations
 
@@ -15,14 +15,13 @@ function HeroSection() {
   return (
     <section className="relative bg-cover bg-center text-white py-16 sm:py-24 px-4 text-center overflow-hidden h-[250px] sm:h-[350px] flex flex-col items-center justify-center"
              style={{
-                 // Use a placeholder image if the actual one isn't available or causes issues
-                 // backgroundImage: "url('https://image.pollinations.ai/prompt/Illustration%20soccer%20ball%20on%20green%20field%20at%20sunset%2C%20warm%20golden%20sky%2C%20vibrant%20green%20grass%2C%20horizontal%2C%20semi-realistic%20style')",
-                 backgroundImage: "url('https://videos.openai.com/vg-assets/assets%2Ftask_01jss3fs1rfcqaca6f80bpj9b2%2F1745673059_img_0.webp?st=2025-04-26T18%3A20%3A00Z&se=2025-05-02T19%3A20%3A00Z&sks=b&skt=2025-04-26T18%3A20%3A00Z&ske=2025-05-02T19%3A20%3A00Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=3d249c53-07fa-4ba4-9b65-0bf8eb4ea46a&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=ItnqDVEMwgHNNHESNCL9lWepdKK%2BpQqOfxUeXTW1gGM%3D&az=oaivgprodscus')",
+                 // Use a relevant and high-quality background image
+                 backgroundImage: "url('https://image.pollinations.ai/prompt/women%20soccer%20team%20celebrating%20victory%20on%20field%20at%20sunset%2C%20brazilian%20community%20background%2C%20warm%20light%2C%20cinematic')",
                  backgroundSize: "cover",
-                 backgroundPosition: "bottom",
+                 backgroundPosition: "center", // Center the image better
             }}>
       {/* Dark overlay for better text readability */}
-      <div className="absolute inset-0 bg-black/30 z-0"></div>
+      <div className="absolute inset-0 bg-black/40 z-0"></div> {/* Slightly increased opacity */}
 
       {/* Content wrapper */}
       <div className="relative z-10 max-w-3xl mx-auto">
@@ -31,7 +30,7 @@ function HeroSection() {
            animate={{ opacity: 1, y: 0 }}
            transition={{ duration: 0.5 }}
            className="text-4xl sm:text-5xl font-bold mb-4 text-accent" // Gold text
-           style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}
+           style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.6)' }} // Enhanced shadow
         >
           Estrelas do Campo
         </motion.h1>
@@ -39,8 +38,8 @@ function HeroSection() {
            initial={{ opacity: 0, y: -20 }}
            animate={{ opacity: 1, y: 0 }}
            transition={{ duration: 0.5, delay: 0.1 }}
-           className="text-xl sm:text-2xl font-semibold mb-4 text-white"
-           style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.3)' }}
+           className="text-xl sm:text-2xl font-semibold mb-4 text-white" // Changed to H2 for structure
+           style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.4)' }}
         >
           Força, Cultura e Inclusão
         </motion.h2>
@@ -48,7 +47,7 @@ function HeroSection() {
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
            transition={{ duration: 0.5, delay: 0.2 }}
-           className="text-base sm:text-lg mb-8 text-white"
+           className="text-base sm:text-lg mb-8 text-gray-100" // Slightly lighter text
         >
           Apoie o futebol feminino e junte-se à nossa comunidade!
         </motion.p>
@@ -57,21 +56,21 @@ function HeroSection() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
+          {/* Smooth scroll Button */}
           <Button
-            asChild
             size="lg"
             variant="accent" // Gold background
-            className="font-semibold shadow-md transition-colors duration-200 hover:bg-yellow-500 text-accent-foreground"
+            className="font-semibold shadow-md transition-transform duration-200 hover:scale-105 text-accent-foreground" // Added hover effect
             onClick={(e) => {
               e.preventDefault();
               const agendaSection = document.getElementById('agenda-section');
               if (agendaSection) {
-                agendaSection.scrollIntoView({ behavior: 'smooth' });
+                agendaSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }
             }}
-            aria-label="Ir para a seção da agenda"
+            aria-label="Ver a agenda de eventos" // More specific aria-label
           >
-            <a href="#agenda-section">Ver Agenda</a>
+            Ver Agenda
           </Button>
         </motion.div>
       </div>
@@ -105,13 +104,14 @@ function ApresentacaoSection() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={{ ...itemVariants, visible: { ...itemVariants.visible, transition: { ...itemVariants.visible.transition, delay: 0.4 } } }}>
             <div className="overflow-hidden rounded-lg shadow-md mb-4 relative aspect-[3/2]">
                <Image
-                  src="https://videos.openai.com/vg-assets/assets%2Ftask_01jss2fn50fert2678jpc003k7%2F1745672019_img_0.webp?st=2025-04-26T18%3A20%3A00Z&se=2025-05-02T19%3A20%3A00Z&sks=b&skt=2025-04-26T18%3A20%3A00Z&ske=2025-05-02T19%3A20%3A00Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=3d249c53-07fa-4ba4-9b65-0bf8eb4ea46a&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=qE9fpdSTKzt4nRejRdCd%2FNR7%2BQw4RCk5qwpE1ZNqTpc%3D&az=oaivgprodscus"
-                  alt="Time de futebol feminino celebrando união com uniforme verde"
+                  // Use a more specific placeholder or a real image URL
+                  src="https://via.placeholder.com/300x200/22C55E/FFFFFF?text=União+do+Time"
+                  alt="Time de futebol feminino celebrando união"
                   fill
                   style={{ objectFit: 'cover' }}
                   className="transition-transform duration-300 hover:scale-105"
                   loading="lazy"
-                  unoptimized // Placeholder
+                  unoptimized // Keep unoptimized for placeholders
                 />
             </div>
             <p className="text-accent font-semibold text-sm">Juntas, somos imbatíveis!</p>
@@ -120,13 +120,13 @@ function ApresentacaoSection() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={{ ...itemVariants, visible: { ...itemVariants.visible, transition: { ...itemVariants.visible.transition, delay: 0.6 } } }}>
             <div className="overflow-hidden rounded-lg shadow-md mb-4 relative aspect-[3/2]">
                <Image
-                  src="https://videos.openai.com/vg-assets/assets%2Ftask_01jsy1aas3em4a1d1d5w5j6sxt%2F1745838570_img_0.webp?st=2025-04-28T09%3A45%3A14Z&se=2025-05-04T10%3A45%3A14Z&sks=b&skt=2025-04-28T09%3A45%3A14Z&ske=2025-05-04T10%3A45%3A14Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=3d249c53-07fa-4ba4-9b65-0bf8eb4ea46a&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=2v2GYwEgOpQU18uVpIrIv3bqf2xeqKZDpCIIhw1tT6Q%3D&az=oaivgprodscus"
-                  alt="Time de futebol feminino celebrando união com uniforme azul"
+                  src="https://via.placeholder.com/300x200/FBBF24/1F2937?text=Ação+no+Campo"
+                  alt="Jogadora de futebol em ação no campo"
                   fill
                   style={{ objectFit: 'cover' }}
                   className="transition-transform duration-300 hover:scale-105"
                   loading="lazy"
-                  unoptimized // Placeholder
+                  unoptimized // Keep unoptimized for placeholders
                />
             </div>
             <p className="text-accent font-semibold text-sm">O campo é nosso palco!</p>
@@ -151,18 +151,19 @@ function LocaisSection() {
   const locais = [
     {
       nome: "Campo Municipal",
-      endereco: "Rua do Esporte, 123, Cidade",
-      descricao: "Nosso lar para treinos e jogos!",
-      imagem: "https://tse4.mm.bing.net/th?id=OIP.fPG8YU27Gh7iH1op7PA97gHaFj&pid=Api&P=0&h=180", // Placeholder image
-      alt: "Imagem do Campo Municipal",
+      endereco: "Rua do Esporte, 123, Cidade Fictícia", // Example address
+      descricao: "Nosso lar para treinos e jogos emocionantes!",
+      // Use more descriptive placeholder text or real image URLs
+      imagem: "https://via.placeholder.com/300x200/4ade80/1f2937?text=Campo+Municipal",
+      alt: "Foto do Campo Municipal",
       icon: <Map className="h-6 w-6 text-primary" />
     },
     {
       nome: "Estádio Central",
-      endereco: "Av. Central, 456, Cidade",
-      descricao: "Palco dos grandes amistosos!",
-      imagem: "https://tse4.mm.bing.net/th?id=OIP.1Drqxt9sjAefZ0K9lM2GgQHaFj&pid=Api&P=0&h=180", // Placeholder image
-      alt: "Imagem do Estádio Central",
+      endereco: "Av. Central, 456, Cidade Fictícia", // Example address
+      descricao: "Palco dos grandes amistosos e celebrações!",
+      imagem: "https://via.placeholder.com/300x200/fbbf24/1f2937?text=Estádio+Central",
+      alt: "Foto do Estádio Central",
       icon: <Building className="h-6 w-6 text-primary" />
     }
   ];
@@ -185,15 +186,15 @@ function LocaisSection() {
               viewport={{ once: true, amount: 0.4 }}
               variants={cardVariants}
             >
-              <Card className="overflow-hidden shadow-lg rounded-lg h-full flex flex-col text-left bg-card border">
-                <div className="relative h-40 w-full bg-muted"> {/* Added bg-muted */}
+              <Card className="overflow-hidden shadow-lg rounded-lg h-full flex flex-col text-left bg-card border hover:shadow-xl transition-shadow duration-200">
+                <div className="relative h-48 w-full bg-muted"> {/* Slightly larger image area */}
                    <Image
                       src={local.imagem}
                       alt={local.alt}
                       fill
                       style={{ objectFit: 'cover' }}
-                      loading="lazy" // Lazy load images in Locais section
-                      unoptimized // Placeholder
+                      loading="lazy"
+                      unoptimized // Keep unoptimized for placeholders
                     />
                 </div>
                 <CardHeader className="flex-row items-center gap-3 pb-2 pt-4 px-4">
@@ -222,17 +223,16 @@ function AgendaSection() {
   // Use useCallback to memoize the fetch function
   const fetchEventos = React.useCallback(async () => {
       setLoading(true);
-      setError(null);
+      setError(null); // Clear previous errors
+      console.log("AgendaSection: Attempting to fetch events via API...");
       try {
-        console.log("AgendaSection: Attempting to fetch events...");
-        const fetchedEventos = await getEventosApi();
-        console.log("AgendaSection: Fetched events successfully:", fetchedEventos.length);
+        const fetchedEventos = await getEventosApi(); // Calls the updated API function
+        console.log(`AgendaSection: Fetched ${fetchedEventos.length} events successfully.`);
         setEventos(fetchedEventos);
       } catch (fetchError: any) {
-        // Use the error message passed from the API handler
-        const errorMessage = fetchError instanceof Error ? fetchError.message : "Erro desconhecido ao buscar eventos.";
+        const errorMessage = fetchError.message || "Erro desconhecido ao buscar eventos.";
         console.error("AgendaSection: Error fetching events:", errorMessage);
-        setError(errorMessage); // Set the specific error message
+        setError(errorMessage); // Set the specific error message from API handler
       } finally {
         setLoading(false);
       }
@@ -242,62 +242,62 @@ function AgendaSection() {
     fetchEventos();
   }, [fetchEventos]); // Depend on the memoized fetch function
 
-  // Animation variants
+  // Animation variants for cards
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: (i: number) => ({
       opacity: 1,
       y: 0,
       transition: {
-        delay: i * 0.1,
-        duration: 0.2, // Fade-in duration 0.2s
+        delay: i * 0.08, // Slightly faster stagger
+        duration: 0.2,
       },
     }),
   };
 
+  // Loading Placeholder Component
+   const LoadingSkeleton = () => (
+     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
+       {[...Array(3)].map((_, i) => (
+         // Simple placeholder div - Use Tailwind classes directly
+         <div key={`skeleton-${i}`} className="h-28 w-full rounded-lg bg-muted/60 animate-pulse border p-4 shadow-sm"></div>
+       ))}
+     </div>
+   );
+
+   // Error Display Component
+   const ErrorDisplay = ({ errorMsg, onRetry }: { errorMsg: string; onRetry: () => void }) => (
+      <div className="flex flex-col items-center justify-center text-center text-destructive bg-destructive/10 p-6 rounded-lg border border-destructive">
+         <AlertCircle className="h-10 w-10 mb-3" />
+         <p className="font-semibold">Erro ao Carregar Agenda</p>
+         {/* Display the specific error message */}
+         <p className="text-sm">{errorMsg}</p>
+         <Button onClick={onRetry} variant="destructive" size="sm" className="mt-4">
+             Tentar Novamente
+         </Button>
+       </div>
+   );
+
+   // Empty State Component
+   const EmptyState = () => (
+     <p className="text-center text-muted-foreground mt-10">Nenhum evento futuro agendado no momento.</p>
+   );
+
 
   return (
-    <section id="agenda-section" className="py-12 px-4 bg-background">
+    // Added scroll-mt-16 to account for sticky header height
+    <section id="agenda-section" className="py-12 px-4 bg-background scroll-mt-16">
        <div className="max-w-4xl mx-auto">
         <h2 className="text-2xl sm:text-3xl font-bold text-primary text-center mb-2">Agenda de Eventos</h2>
         <p className="text-muted-foreground text-center mb-8">Futebol feminino: força e cultura.</p>
 
-        {loading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
-            {[...Array(3)].map((_, i) => ( // Show 3 simple placeholders
-                <div key={`skeleton-${i}`} className="shadow-md rounded-lg border border-border bg-card p-4 space-y-3 animate-pulse">
-                    <div className="h-6 w-3/4 bg-muted rounded"></div>
-                    <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded-full bg-muted"></div>
-                        <div className="h-4 w-1/2 bg-muted rounded"></div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded-full bg-muted"></div>
-                        <div className="h-4 w-1/3 bg-muted rounded"></div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded-full bg-muted"></div>
-                        <div className="h-4 w-2/3 bg-muted rounded"></div>
-                    </div>
-                </div>
-            ))}
-          </div>
-        ) : error ? ( // Display specific error message
-          <div className="flex flex-col items-center justify-center text-center text-destructive bg-destructive/10 p-6 rounded-lg border border-destructive">
-            <AlertCircle className="h-10 w-10 mb-3" />
-            <p className="font-semibold">Erro ao Carregar Agenda</p>
-            <p className="text-sm">{error}</p> {/* Display the fetched error message */}
-            <Button onClick={fetchEventos} variant="destructive" size="sm" className="mt-4">
-                Tentar Novamente
-            </Button>
-          </div>
-        ) : eventos.length === 0 ? (
-          <p className="text-center text-muted-foreground mt-10">Nenhum evento futuro agendado no momento.</p>
-        ) : (
+        {loading ? <LoadingSkeleton /> :
+         error ? <ErrorDisplay errorMsg={error} onRetry={fetchEventos} /> :
+         eventos.length === 0 ? <EmptyState /> : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
             {eventos.map((evento: Evento, index: number) => (
               <motion.div
-                 key={evento.id}
+                 key={evento.id || index} // Use ID if available, fallback to index
                  custom={index}
                  initial="hidden"
                  animate="visible"
@@ -306,7 +306,8 @@ function AgendaSection() {
               >
                 <Card className="shadow-lg rounded-lg overflow-hidden border border-border bg-card hover:shadow-xl transition-shadow duration-200">
                   <CardHeader className="pb-3 pt-4 px-4">
-                    <CardTitle className="text-primary text-xl font-semibold">{evento.titulo}</CardTitle>
+                    {/* Use h3 for semantic structure within the card */}
+                    <CardTitle as="h3" className="text-primary text-xl font-semibold">{evento.titulo}</CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-4 space-y-2 text-foreground">
                     <div className="flex items-center gap-2">

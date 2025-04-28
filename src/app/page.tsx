@@ -15,9 +15,9 @@ function HeroSection() {
   return (
     <section className="relative bg-cover bg-center text-white py-16 sm:py-24 px-4 text-center overflow-hidden h-[250px] sm:h-[300px] md:h-[350px] flex flex-col items-center justify-center"
              style={{
-                 backgroundImage: "url('https://image.pollinations.ai/prompt/soccer%20ball%20on%20green%20field%20at%20sunset%2C%20warm%20vibrant%20colors%2C%20golden%20sky%2C%20green%20grass%2C%20semi-realistic%20illustration%2C%20horizontal')",
+                 backgroundImage: "url('https://videos.openai.com/vg-assets/assets%2Ftask_01jss3fs1rfcqaca6f80bpj9b2%2F1745673059_img_0.webp?st=2025-04-28T13%3A27%3A30Z&se=2025-05-04T14%3A27%3A30Z&sks=b&skt=2025-04-28T13%3A27%3A30Z&ske=2025-05-04T14%3A27%3A30Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=3d249c53-07fa-4ba4-9b65-0bf8eb4ea46a&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=yYgVw4WlDrlLOrC3cpBZOv0JJ17KkYh53O0IJWeYTtA%3D&az=oaivgprodscus')",
                  backgroundSize: "cover",
-                 backgroundPosition: "center",
+                 backgroundPosition: "bottom",
             }}>
       {/* Dark overlay for better text readability */}
       <div className="absolute inset-0 bg-black/30 z-0"></div>
@@ -103,8 +103,8 @@ function ApresentacaoSection() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={{ ...itemVariants, visible: { ...itemVariants.visible, transition: { ...itemVariants.visible.transition, delay: 0.4 } } }}>
             <div className="overflow-hidden rounded-lg shadow-md mb-4 relative aspect-[3/2]">
                <Image
-                  src="https://via.placeholder.com/300x200?text=Futebol+Feminino"
-                  alt="Time de futebol feminino celebrando"
+                  src="https://videos.openai.com/vg-assets/assets%2Ftask_01jsy1aas3em4a1d1d5w5j6sxt%2F1745838570_img_0.webp?st=2025-04-28T13%3A27%3A30Z&se=2025-05-04T14%3A27%3A30Z&sks=b&skt=2025-04-28T13%3A27%3A30Z&ske=2025-05-04T14%3A27%3A30Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=3d249c53-07fa-4ba4-9b65-0bf8eb4ea46a&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=ObSLSXPt4Kbdad19sAo39mATNBQpAgVbGQ4i3xbbpes%3D&az=oaivgprodscus"
+                  alt="Time de futebol feminino celebrando com uniforme azul"
                   fill
                   style={{ objectFit: 'cover' }}
                   className="transition-transform duration-300 hover:scale-105"
@@ -118,8 +118,8 @@ function ApresentacaoSection() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={{ ...itemVariants, visible: { ...itemVariants.visible, transition: { ...itemVariants.visible.transition, delay: 0.6 } } }}>
             <div className="overflow-hidden rounded-lg shadow-md mb-4 relative aspect-[3/2]">
                <Image
-                  src="https://via.placeholder.com/300x200?text=Jogadora"
-                  alt="Jogadora de futebol chutando a bola"
+                  src="https://videos.openai.com/vg-assets/assets%2Ftask_01jss2fn50fert2678jpc003k7%2F1745672019_img_0.webp?st=2025-04-28T13%3A27%3A30Z&se=2025-05-04T14%3A27%3A30Z&sks=b&skt=2025-04-28T13%3A27%3A30Z&ske=2025-05-04T14%3A27%3A30Z&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skoid=3d249c53-07fa-4ba4-9b65-0bf8eb4ea46a&skv=2019-02-02&sv=2018-11-09&sr=b&sp=r&spr=https%2Chttp&sig=mU7r29y0iCgfcJ6tmTL7e%2FYNoKL29Y59f9CTnAz87Io%3D&az=oaivgprodscus"
+                  alt="Nosso time com uniforme verde"
                   fill
                   style={{ objectFit: 'cover' }}
                   className="transition-transform duration-300 hover:scale-105"
@@ -152,7 +152,7 @@ function LocaisSection() {
       endereco: "Rua do Esporte, 123, Cidade Fictícia", // Example address
       descricao: "Nosso lar para treinos e jogos emocionantes!",
       // Use a more specific placeholder image
-      imagem: "https://via.placeholder.com/300x200/4ade80/1f2937?text=Campo+Municipal",
+      imagem: "https://tse4.mm.bing.net/th?id=OIP.hJ9V19IY70LYG6jDrau0LwHaEr&pid=Api&P=0&h=180",
       alt: "Foto do Campo Municipal",
       icon: <Map className="h-6 w-6 text-primary" />
     },
@@ -161,7 +161,7 @@ function LocaisSection() {
       endereco: "Av. Central, 456, Cidade Fictícia", // Example address
       descricao: "Palco dos grandes amistosos e celebrações!",
        // Use a more specific placeholder image
-      imagem: "https://via.placeholder.com/300x200/fbbf24/1f2937?text=Estádio+Central",
+      imagem: "https://tse1.mm.bing.net/th?id=OIP.JRYDgOm2snu6WxbWpWgQCAHaFj&pid=Api&P=0&h=180",
       alt: "Foto do Estádio Central",
       icon: <Building className="h-6 w-6 text-primary" />
     }

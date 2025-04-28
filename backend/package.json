@@ -11,7 +11,8 @@
   "keywords": [
     "nodejs",
     "express",
-    "postgresql"
+    "postgresql",
+    "supabase"
   ],
   "author": "",
   "license": "ISC",

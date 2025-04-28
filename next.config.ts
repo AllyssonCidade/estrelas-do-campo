@@ -44,18 +44,12 @@ const nextConfig: NextConfig = {
     ],
   },
   env: {
-     // Make API URL available client-side. Vercel automatically provides VERCEL_URL
-     // which points to the frontend deployment URL. We need the *backend* URL.
-     // Set NEXT_PUBLIC_API_URL in Vercel Environment Variables for the frontend.
-     // This env var should point to the backend deployment URL (e.g., your Vercel backend function URL or Render URL).
+     // Use environment variables for Vercel deployment
      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-
-     // Make admin password available client-side for the login check.
-     // Set ADMIN_PASSWORD in Vercel Environment Variables. Use NEXT_PUBLIC_ prefix
-     // if the check truly needs to happen client-side (less secure).
-     // If check happens server-side (e.g., in API routes), just ADMIN_PASSWORD is fine.
-     // For this setup where login happens client-side:
-     NEXT_PUBLIC_ADMIN_PASSWORD: process.env.ADMIN_PASSWORD, // Renamed from ADMIN_PASSWORD to NEXT_PUBLIC_ADMIN_PASSWORD for clarity
+     NEXT_PUBLIC_FRONTEND_URL: process.env.NEXT_PUBLIC_FRONTEND_URL,
+     // Ensure the admin password is also available if needed client-side (less secure)
+     // If only used server-side (API routes), use ADMIN_PASSWORD directly in Vercel env vars
+     NEXT_PUBLIC_ADMIN_PASSWORD: process.env.ADMIN_PASSWORD, // Keep if login check is client-side
   }
 };
 

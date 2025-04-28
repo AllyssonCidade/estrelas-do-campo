@@ -128,8 +128,8 @@ export default function NoticiasPage() {
                 <div className="flex flex-col justify-between p-4 flex-grow">
                   <div>
                     <CardHeader className="p-0 pb-2">
-                      {/* Use h3 for semantic structure */}
-                      <CardTitle as="h3" className="text-lg text-primary">{noticia.titulo}</CardTitle>
+                      {/* Fix: Removed 'as' prop from CardTitle */}
+                      <CardTitle className="text-lg text-primary">{noticia.titulo}</CardTitle>
                     </CardHeader>
                     <CardContent className="p-0 pb-2">
                       <p className="text-sm text-foreground line-clamp-3">{noticia.texto}</p>

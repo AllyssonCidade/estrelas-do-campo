@@ -95,7 +95,7 @@ function ApresentacaoSection() {
         <motion.p
           initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.5 }} variants={{ ...itemVariants, visible: { ...itemVariants.visible, transition: { ...itemVariants.visible.transition, delay: 0.2 } } }}
           className="text-foreground mb-10 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-          As Estrelas do Campo são mais que um time: somos um movimento de inclusão, empoderamento e cultura. Nosso futebol une a comunidade e inspira mulheres a brilharem!
+          As Estrelas do Campo são mais que um time: somos um movimento de inclusão, empoderamento e cultura. Nosso futebol une a comunidade e inspira mulheres a brilharem! <br/>Nascido no berço de Lauro de Freitas - BA, estamos cresendo e levando o poder feminino aos campos de toda Bahia
         </motion.p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">

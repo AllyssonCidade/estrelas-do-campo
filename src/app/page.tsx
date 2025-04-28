@@ -13,15 +13,14 @@ import { motion } from 'framer-motion'; // Import motion for animations
 // --- Hero Section ---
 function HeroSection() {
   return (
-    <section className="relative bg-cover bg-center text-white py-16 sm:py-24 px-4 text-center overflow-hidden h-[250px] sm:h-[350px] flex flex-col items-center justify-center"
+    <section className="relative bg-cover bg-center text-white py-16 sm:py-24 px-4 text-center overflow-hidden h-[250px] sm:h-[300px] md:h-[350px] flex flex-col items-center justify-center"
              style={{
-                 // Use a relevant and high-quality background image
-                 backgroundImage: "url('https://image.pollinations.ai/prompt/women%20soccer%20team%20celebrating%20victory%20on%20field%20at%20sunset%2C%20brazilian%20community%20background%2C%20warm%20light%2C%20cinematic')",
+                 backgroundImage: "url('https://image.pollinations.ai/prompt/soccer%20ball%20on%20green%20field%20at%20sunset%2C%20warm%20vibrant%20colors%2C%20golden%20sky%2C%20green%20grass%2C%20semi-realistic%20illustration%2C%20horizontal')",
                  backgroundSize: "cover",
-                 backgroundPosition: "center", // Center the image better
+                 backgroundPosition: "center",
             }}>
       {/* Dark overlay for better text readability */}
-      <div className="absolute inset-0 bg-black/40 z-0"></div> {/* Slightly increased opacity */}
+      <div className="absolute inset-0 bg-black/30 z-0"></div>
 
       {/* Content wrapper */}
       <div className="relative z-10 max-w-3xl mx-auto">
@@ -29,16 +28,16 @@ function HeroSection() {
            initial={{ opacity: 0, y: -20 }}
            animate={{ opacity: 1, y: 0 }}
            transition={{ duration: 0.5 }}
-           className="text-4xl sm:text-5xl font-bold mb-4 text-accent" // Gold text
-           style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.6)' }} // Enhanced shadow
+           className="text-4xl sm:text-5xl font-bold mb-4 text-accent" // Cheerful Golden text
+           style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.6)' }}
         >
           Estrelas do Campo
         </motion.h1>
-         <motion.h2
+        <motion.h2
            initial={{ opacity: 0, y: -20 }}
            animate={{ opacity: 1, y: 0 }}
            transition={{ duration: 0.5, delay: 0.1 }}
-           className="text-xl sm:text-2xl font-semibold mb-4 text-white" // Changed to H2 for structure
+           className="text-xl sm:text-2xl font-semibold mb-4 text-white"
            style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.4)' }}
         >
           Força, Cultura e Inclusão
@@ -47,7 +46,7 @@ function HeroSection() {
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
            transition={{ duration: 0.5, delay: 0.2 }}
-           className="text-base sm:text-lg mb-8 text-gray-100" // Slightly lighter text
+           className="text-base sm:text-lg mb-8 text-gray-100"
         >
           Apoie o futebol feminino e junte-se à nossa comunidade!
         </motion.p>
@@ -60,7 +59,7 @@ function HeroSection() {
           <Button
             size="lg"
             variant="accent" // Gold background
-            className="font-semibold shadow-md transition-transform duration-200 hover:scale-105 text-accent-foreground" // Added hover effect
+            className="font-semibold shadow-md transition-transform duration-200 hover:scale-105 text-accent-foreground hover:bg-yellow-500" // Specific darker gold on hover
             onClick={(e) => {
               e.preventDefault();
               const agendaSection = document.getElementById('agenda-section');
@@ -68,7 +67,7 @@ function HeroSection() {
                 agendaSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }
             }}
-            aria-label="Ver a agenda de eventos" // More specific aria-label
+            aria-label="Ver a agenda de eventos"
           >
             Ver Agenda
           </Button>
@@ -104,9 +103,8 @@ function ApresentacaoSection() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={{ ...itemVariants, visible: { ...itemVariants.visible, transition: { ...itemVariants.visible.transition, delay: 0.4 } } }}>
             <div className="overflow-hidden rounded-lg shadow-md mb-4 relative aspect-[3/2]">
                <Image
-                  // Use a more specific placeholder or a real image URL
-                  src="https://via.placeholder.com/300x200/22C55E/FFFFFF?text=União+do+Time"
-                  alt="Time de futebol feminino celebrando união"
+                  src="https://via.placeholder.com/300x200?text=Futebol+Feminino"
+                  alt="Time de futebol feminino celebrando"
                   fill
                   style={{ objectFit: 'cover' }}
                   className="transition-transform duration-300 hover:scale-105"
@@ -114,14 +112,14 @@ function ApresentacaoSection() {
                   unoptimized // Keep unoptimized for placeholders
                 />
             </div>
-            <p className="text-accent font-semibold text-sm">Juntas, somos imbatíveis!</p>
+             <p className="text-accent font-semibold text-sm">Juntas, somos imbatíveis!</p>
           </motion.div>
            {/* Image 2 */}
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={{ ...itemVariants, visible: { ...itemVariants.visible, transition: { ...itemVariants.visible.transition, delay: 0.6 } } }}>
             <div className="overflow-hidden rounded-lg shadow-md mb-4 relative aspect-[3/2]">
                <Image
-                  src="https://via.placeholder.com/300x200/FBBF24/1F2937?text=Ação+no+Campo"
-                  alt="Jogadora de futebol em ação no campo"
+                  src="https://via.placeholder.com/300x200?text=Jogadora"
+                  alt="Jogadora de futebol chutando a bola"
                   fill
                   style={{ objectFit: 'cover' }}
                   className="transition-transform duration-300 hover:scale-105"
@@ -129,7 +127,7 @@ function ApresentacaoSection() {
                   unoptimized // Keep unoptimized for placeholders
                />
             </div>
-            <p className="text-accent font-semibold text-sm">O campo é nosso palco!</p>
+             <p className="text-accent font-semibold text-sm">O campo é nosso palco!</p>
           </motion.div>
         </div>
       </div>
@@ -153,7 +151,7 @@ function LocaisSection() {
       nome: "Campo Municipal",
       endereco: "Rua do Esporte, 123, Cidade Fictícia", // Example address
       descricao: "Nosso lar para treinos e jogos emocionantes!",
-      // Use more descriptive placeholder text or real image URLs
+      // Use a more specific placeholder image
       imagem: "https://via.placeholder.com/300x200/4ade80/1f2937?text=Campo+Municipal",
       alt: "Foto do Campo Municipal",
       icon: <Map className="h-6 w-6 text-primary" />
@@ -162,6 +160,7 @@ function LocaisSection() {
       nome: "Estádio Central",
       endereco: "Av. Central, 456, Cidade Fictícia", // Example address
       descricao: "Palco dos grandes amistosos e celebrações!",
+       // Use a more specific placeholder image
       imagem: "https://via.placeholder.com/300x200/fbbf24/1f2937?text=Estádio+Central",
       alt: "Foto do Estádio Central",
       icon: <Building className="h-6 w-6 text-primary" />
@@ -187,7 +186,7 @@ function LocaisSection() {
               variants={cardVariants}
             >
               <Card className="overflow-hidden shadow-lg rounded-lg h-full flex flex-col text-left bg-card border hover:shadow-xl transition-shadow duration-200">
-                <div className="relative h-48 w-full bg-muted"> {/* Slightly larger image area */}
+                <div className="relative h-48 w-full bg-muted">
                    <Image
                       src={local.imagem}
                       alt={local.alt}
@@ -249,8 +248,9 @@ function AgendaSection() {
       opacity: 1,
       y: 0,
       transition: {
-        delay: i * 0.08, // Slightly faster stagger
-        duration: 0.2,
+        delay: i * 0.08, // Stagger animation
+        duration: 0.2, // Fade-in duration
+        ease: 'easeOut', // Animation easing
       },
     }),
   };
@@ -260,7 +260,7 @@ function AgendaSection() {
      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
        {[...Array(3)].map((_, i) => (
          // Simple placeholder div - Use Tailwind classes directly
-         <div key={`skeleton-${i}`} className="h-28 w-full rounded-lg bg-muted/60 animate-pulse border p-4 shadow-sm"></div>
+          <div key={`skeleton-${i}`} className="h-28 w-full rounded-lg bg-muted/60 animate-pulse border p-4 shadow-sm"></div>
        ))}
      </div>
    );
@@ -304,10 +304,10 @@ function AgendaSection() {
                  variants={cardVariants}
                  className="w-full"
               >
-                <Card className="shadow-lg rounded-lg overflow-hidden border border-border bg-card hover:shadow-xl transition-shadow duration-200">
+                <Card className="shadow-md rounded-lg overflow-hidden border border-border bg-card hover:shadow-lg transition-shadow duration-200">
                   <CardHeader className="pb-3 pt-4 px-4">
-                    {/* Use h3 for semantic structure within the card */}
-                    <CardTitle as="h3" className="text-primary text-xl font-semibold">{evento.titulo}</CardTitle>
+                     {/* FIX: Remove 'as' prop from CardTitle */}
+                    <CardTitle className="text-primary text-xl font-semibold">{evento.titulo}</CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-4 space-y-2 text-foreground">
                     <div className="flex items-center gap-2">

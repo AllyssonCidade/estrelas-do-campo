@@ -307,7 +307,7 @@ function AgendaSection() {
                 <Card className="shadow-lg rounded-lg overflow-hidden border border-border bg-card hover:shadow-xl transition-shadow duration-200">
                   <CardHeader className="pb-3 pt-4 px-4">
                     {/* Use h3 for semantic structure within the card */}
-                    <CardTitle as="h3" className="text-primary text-xl font-semibold">{evento.titulo}</CardTitle>
+                    <CardTitle id="h3" className="text-primary text-xl font-semibold">{evento.titulo}</CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-4 space-y-2 text-foreground">
                     <div className="flex items-center gap-2">
